@@ -1,0 +1,27 @@
+###############################################################################
+#       Local Settings configuration, please keep gitignored.                 #
+#                Must be named localConfig.yaml (or .yml)                     #
+# REQUIRED : Must change values if using local settings file for configuraion #
+###############################################################################
+
+dbUsername: "root"
+dbPassword: "password123"
+dbName: "marqeta"
+
+dbHostName: "127.0.0.1"
+dbPort: 3306
+dbDriver: "mysql" # Mysql recommended
+
+
+#############################
+# Optional, but recommended #
+#############################
+
+debug: true                        # Highly recommended
+
+##################################
+# Optional: Not likely to change #
+##################################
+
+serverHostName: "http://localhost" # Hostname to run this api on
+serverPort:  "9060"               # Port to run this api on
