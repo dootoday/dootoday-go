@@ -13,6 +13,12 @@ func init() {
 }
 
 var (
+	// AccessTokenSecret : This is the jwt secret for access token
+	AccessTokenSecret string
+
+	// RefreshTokenSecret : This is the jwt secret for refresh token
+	RefreshTokenSecret string
+
 	// ServerPort : port to run gin local server on
 	ServerPort int
 
@@ -104,6 +110,9 @@ func SetSettingsFromViper() {
 	DbPassword = os.Getenv("DB_PASSWORD")
 	glog.Info("Db settings: ", DbDriver, " ", DbHostName, " ", DbName)
 
+	AccessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
+	RefreshTokenSecret = os.Getenv("REFRESH_TOKEN_SECRET")
+
 	Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 	ServerHostName = os.Getenv("SERVER_HOSTNAME")
 	ServerPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
@@ -130,6 +139,8 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	}
 	debug := viper.GetBool("debug")
 
+	accessTokenSecret := viper.GetString("accessTokenSecret")
+	refreshTokenSecret := viper.GetString("refreshTokenSecret")
 	serverHostName := viper.GetString("serverHostName")
 	serverPort := viper.GetString("serverPort")
 	dbDriver := viper.GetString("dbDriver")
@@ -151,5 +162,7 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	os.Setenv("DEBUG", strconv.FormatBool(debug))
 	os.Setenv("SERVER_HOSTNAME", serverHostName)
 	os.Setenv("SERVER_PORT", serverPort)
+	os.Setenv("ACCESS_TOKEN_SECRET", accessTokenSecret)
+	os.Setenv("REFRESH_TOKEN_SECRET", refreshTokenSecret)
 	glog.Info("setEnvironmentVariablesFromConfig: Config finished reading in settings from file.")
 }

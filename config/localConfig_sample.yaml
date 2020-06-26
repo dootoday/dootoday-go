@@ -6,7 +6,7 @@
 
 dbUsername: "root"
 dbPassword: "password123"
-dbName: "marqeta"
+dbName: "dootoday"
 
 dbHostName: "127.0.0.1"
 dbPort: 3306
@@ -25,3 +25,10 @@ debug: true                        # Highly recommended
 
 serverHostName: "http://localhost" # Hostname to run this api on
 serverPort:  "9060"               # Port to run this api on
+
+##################################
+# JWT TOKEN SECRETS              #
+##################################
+
+accessTokenSecret: "access-this-is-a-very-secret-string"
+refreshTokenSecret: "refresh-this-is-a-very-secret-string"
