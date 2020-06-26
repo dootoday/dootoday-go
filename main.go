@@ -5,6 +5,7 @@ import (
 	gauthservice "apidootoday/googleauth"
 	"apidootoday/gorm"
 	jwtservice "apidootoday/jwtservice"
+	subscriptionservice "apidootoday/subscription"
 	userservice "apidootoday/user"
 
 	"github.com/golang/glog"
@@ -23,7 +24,14 @@ func main() {
 		db, tokenService, gauthService,
 	)
 
+	subscription := subscriptionservice.NewSubscriptionService(db)
+
+	// Table migrations
 	err = us.Migrate()
+	if err != nil {
+		glog.Fatal("Having some problem with migration", err)
+	}
+	err = subscription.Migrate()
 	if err != nil {
 		glog.Fatal("Having some problem with migration", err)
 	}
