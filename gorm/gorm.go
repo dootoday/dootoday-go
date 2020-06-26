@@ -28,6 +28,5 @@ func InitDB() (*gorm.DB, error) {
 	if err != nil {
 		return db, err
 	}
-	defer db.Close()
 	return db, err
 }
