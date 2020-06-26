@@ -26,3 +26,26 @@ func (us *UserService) Migrate() error {
 	}
 	return nil
 }
+
+// Create :
+func (us *UserService) Create(user *User) error {
+	glog.Info("Creating users table")
+	err := us.DB.Create(user).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UserExists :
+func (us *UserService) UserExists(user *User) (bool, error) {
+	err := us.DB.Where("google_id=?", user.GoogleID).First(user).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
+}

@@ -9,28 +9,6 @@ import (
 	"github.com/brianvoe/sjwt"
 )
 
-// GetAccessToken :
-func GetAccessToken(userID uint) string {
-	claims := sjwt.New()
-	claims.Set("user_id", userID)
-	claims.SetIssuedAt(time.Now().UTC())
-	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 1))
-	secretKey := []byte(config.AccessTokenSecret)
-	jwt := claims.Generate(secretKey)
-	return jwt
-}
-
-// GetRefreshToken :
-func GetRefreshToken(userID uint) string {
-	claims := sjwt.New()
-	claims.Set("user_id", userID)
-	claims.SetIssuedAt(time.Now().UTC())
-	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 24 * 30 * 12))
-	secretKey := []byte(config.RefreshTokenSecret)
-	jwt := claims.Generate(secretKey)
-	return jwt
-}
-
 // TokenType :
 type TokenType string
 
@@ -43,30 +21,46 @@ const (
 )
 
 // TokenService :
-type TokenService struct {
-	token     string
-	tokenType TokenType
-}
+type TokenService struct{}
 
 // NewTokenService : instantiate a new service
-func NewTokenService(token string, ttype TokenType) *TokenService {
-	return &TokenService{
-		token:     token,
-		tokenType: ttype,
-	}
+func NewTokenService() *TokenService {
+	return &TokenService{}
+}
+
+// GetAccessToken :
+func (j *TokenService) GetAccessToken(userID uint) string {
+	claims := sjwt.New()
+	claims.Set("user_id", userID)
+	claims.SetIssuedAt(time.Now().UTC())
+	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 1))
+	secretKey := []byte(config.AccessTokenSecret)
+	jwt := claims.Generate(secretKey)
+	return jwt
+}
+
+// GetRefreshToken :
+func (j *TokenService) GetRefreshToken(userID uint) string {
+	claims := sjwt.New()
+	claims.Set("user_id", userID)
+	claims.SetIssuedAt(time.Now().UTC())
+	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 24 * 30 * 12))
+	secretKey := []byte(config.RefreshTokenSecret)
+	jwt := claims.Generate(secretKey)
+	return jwt
 }
 
 // IsTokenValid : check for validity
-func (j *TokenService) IsTokenValid() (bool, error) {
+func (j *TokenService) IsTokenValid(token string, tokenType TokenType) (bool, error) {
 	secretKey := []byte(config.AccessTokenSecret)
-	if j.tokenType == RefreshTokenType {
+	if tokenType == RefreshTokenType {
 		secretKey = []byte(config.RefreshTokenSecret)
 	}
-	verified := sjwt.Verify(j.token, secretKey)
+	verified := sjwt.Verify(token, secretKey)
 	if !verified {
 		return false, nil
 	}
-	claims, err := sjwt.Parse(j.token)
+	claims, err := sjwt.Parse(token)
 	if err != nil {
 		return false, err
 	}
@@ -80,9 +74,9 @@ func (j *TokenService) IsTokenValid() (bool, error) {
 	return true, nil
 }
 
-// GetUserID : get the user id from the token
-func (j *TokenService) GetUserID() (uint, error) {
-	claims, err := sjwt.Parse(j.token)
+// GetUserIDFromToken : get the user id from the token
+func (j *TokenService) GetUserIDFromToken(token string) (uint, error) {
+	claims, err := sjwt.Parse(token)
 	if err != nil {
 		return uint(0), err
 	}
@@ -92,4 +86,13 @@ func (j *TokenService) GetUserID() (uint, error) {
 		return uint(0), err
 	}
 	return uint(userID), nil
+}
+
+// GetInfoFromToken : get info from token
+func (j *TokenService) GetInfoFromToken(token string, key string) (string, error) {
+	claims, err := sjwt.Parse(token)
+	if err != nil {
+		return "", err
+	}
+	return claims.GetStr(key)
 }
