@@ -13,6 +13,8 @@ require (
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/spf13/viper v1.7.0
 	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4 // indirect
+	google.golang.org/api v0.28.0
+	google.golang.org/grpc v1.30.0 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

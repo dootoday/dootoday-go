@@ -14,7 +14,7 @@ func GetAccessToken(userID uint) string {
 	claims := sjwt.New()
 	claims.Set("user_id", userID)
 	claims.SetIssuedAt(time.Now().UTC())
-	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 720))
+	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 1))
 	secretKey := []byte(config.AccessTokenSecret)
 	jwt := claims.Generate(secretKey)
 	return jwt
@@ -25,7 +25,7 @@ func GetRefreshToken(userID uint) string {
 	claims := sjwt.New()
 	claims.Set("user_id", userID)
 	claims.SetIssuedAt(time.Now().UTC())
-	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 1))
+	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 24 * 30 * 12))
 	secretKey := []byte(config.RefreshTokenSecret)
 	jwt := claims.Generate(secretKey)
 	return jwt

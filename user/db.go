@@ -12,6 +12,7 @@ type User struct {
 	FirstName string `gorm:"type:varchar(100);"`
 	LastName  string `gorm:"type:varchar(100);"`
 	Email     string `gorm:"type:varchar(100);unique_index"`
+	GoogleID  string `gorm:"index:googleid"`
 	Avatar    string `gorm:"type:text"`
 }
 

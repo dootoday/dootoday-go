@@ -12,12 +12,7 @@ import (
 )
 
 func main() {
-	t := jwtservice.GetRefreshToken(uint(1))
-	ts := jwtservice.NewTokenService(t, jwtservice.RefreshTokenType)
-	fmt.Println(ts.GetUserID())
-	fmt.Println(ts.IsTokenValid())
-	time.Sleep(time.Second * 11)
-	fmt.Println(ts.IsTokenValid())
+
 }
 
 func poxyMain() {
@@ -33,4 +28,11 @@ func poxyMain() {
 	}
 	defer db.Close()
 	gin.Run()
+
+	t := jwtservice.GetRefreshToken(uint(1))
+	ts := jwtservice.NewTokenService(t, jwtservice.RefreshTokenType)
+	fmt.Println(ts.GetUserID())
+	fmt.Println(ts.IsTokenValid())
+	time.Sleep(time.Second * 11)
+	fmt.Println(ts.IsTokenValid())
 }
