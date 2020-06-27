@@ -105,3 +105,23 @@ func (ss *SubscriptionService) CreateSubscripton(userID uint, planID uint) error
 	}
 	return err
 }
+
+// DaysLeftForUser : this function gives the number days left
+// for the user
+func (ss *SubscriptionService) DaysLeftForUser(userID uint) (int, error) {
+	subs := []Subscription{}
+	now := time.Now()
+	err := ss.DB.Where("user_id=? AND end_date>=?", userID, now).
+		Find(&subs).Error
+	if err != nil {
+		glog.Error(err)
+		return 0, err
+	}
+	totalDays := 0
+	for _, sub := range subs {
+		days := int(sub.EndDate.Sub(now).Hours() / 24)
+		totalDays = totalDays + days
+	}
+	// 1 day buffer always
+	return totalDays + 1, nil
+}
