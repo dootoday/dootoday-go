@@ -37,7 +37,7 @@ func main() {
 	}
 
 	authHandlers := ginservice.NewAuthHandler(
-		us, tokenService, gauthService,
+		us, tokenService, gauthService, subscription,
 	)
 	ginService := ginservice.NewGinService(authHandlers)
 	// Run gin

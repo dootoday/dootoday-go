@@ -19,15 +19,16 @@ type Subscription struct {
 // Plan :
 type Plan struct {
 	gorm.Model
-	Name               string `gorm:"type:varchar(20);"`
+	Name               string `gorm:"type:varchar(20);unique;not null"`
 	Description        string `gorm:"type:varchar(120);"`
 	DurationInDays     int
-	PromoCode          string `gorm:"type:varchar(5);`
+	PromoCode          string `gorm:"type:varchar(15);`
 	AmountInCents      int
 	OfferAmountInCents int
 	Display            bool
 	Active             bool
 	UseAllowed         int
+	PlanType           string `gorm:"type:varchar(15);`
 }
 
 // Migrate : This is the db migrate function for
@@ -54,6 +55,7 @@ func (us *SubscriptionService) Migrate() error {
 		Display:            false,
 		Active:             true,
 		UseAllowed:         1,
+		PlanType:           "promo",
 	}, {
 		Name:               "promo-30",
 		Description:        "Apply your promo code",
@@ -64,6 +66,18 @@ func (us *SubscriptionService) Migrate() error {
 		Display:            false,
 		Active:             true,
 		UseAllowed:         1,
+		PlanType:           "promo",
+	}, {
+		Name:               "yearly",
+		Description:        "Yearly 250 rupees",
+		DurationInDays:     366,
+		PromoCode:          "",
+		AmountInCents:      50000,
+		OfferAmountInCents: 25000,
+		Display:            true,
+		Active:             true,
+		UseAllowed:         0,
+		PlanType:           "purchase",
 	}}
 	err = us.DB.First(&Plan{}).Error
 	if err == gorm.ErrRecordNotFound {

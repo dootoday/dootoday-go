@@ -29,18 +29,18 @@ func NewUserService(
 }
 
 var (
-	// EmailNotVerifiedError :
-	EmailNotVerifiedError = errors.New("Email not verified")
+	// ErrEmailNotVerified :
+	ErrEmailNotVerified = errors.New("Email not verified")
 )
 
-// Login :
-func (us *UserService) Login(idToken string) (uint, error) {
+// Login : returns userID, isNewUser, error
+func (us *UserService) Login(idToken string) (uint, bool, error) {
 	info, err := us.gauthservice.VerifyIDToken(idToken)
 	if err != nil {
-		return uint(0), err
+		return uint(0), false, err
 	}
 	if !info.VerifiedEmail {
-		return uint(0), EmailNotVerifiedError
+		return uint(0), false, ErrEmailNotVerified
 	}
 	fname, _ := us.jwtService.GetInfoFromToken(
 		idToken, "given_name",
@@ -60,18 +60,19 @@ func (us *UserService) Login(idToken string) (uint, error) {
 	}
 	userExists, err := us.UserExists(&user)
 	if err != nil {
-		return uint(0), err
+		return uint(0), false, err
 	}
+	isNewUser := false
 	if !userExists {
 		glog.Info("User does not exists")
 		// Creating a new user
 		err := us.Create(&user)
 		if err != nil {
-			return uint(0), err
+			return uint(0), false, err
 		}
 		glog.Info("New user created for ", user.Email)
-		// TODO : create initial task lists and tasks
+		isNewUser = true
 	}
 	glog.Info("User login ", user.Email)
-	return user.ID, nil
+	return user.ID, isNewUser, nil
 }

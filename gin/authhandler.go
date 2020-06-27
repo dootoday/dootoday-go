@@ -3,6 +3,7 @@ package service
 import (
 	gauthservice "apidootoday/googleauth"
 	jwtservice "apidootoday/jwtservice"
+	subscriptionservice "apidootoday/subscription"
 	userservice "apidootoday/user"
 	"errors"
 	"net/http"
@@ -13,9 +14,10 @@ import (
 
 // AuthHandler :
 type AuthHandler struct {
-	UserService  *userservice.UserService
-	TokenService *jwtservice.TokenService
-	GAuthService *gauthservice.GoogleAuthService
+	UserService         *userservice.UserService
+	TokenService        *jwtservice.TokenService
+	GAuthService        *gauthservice.GoogleAuthService
+	SubscriptionService *subscriptionservice.SubscriptionService
 }
 
 // NewAuthHandler :
@@ -23,11 +25,13 @@ func NewAuthHandler(
 	userService *userservice.UserService,
 	tokenService *jwtservice.TokenService,
 	gauthService *gauthservice.GoogleAuthService,
+	subService *subscriptionservice.SubscriptionService,
 ) *AuthHandler {
 	return &AuthHandler{
-		UserService:  userService,
-		TokenService: tokenService,
-		GAuthService: gauthService,
+		UserService:         userService,
+		TokenService:        tokenService,
+		GAuthService:        gauthService,
+		SubscriptionService: subService,
 	}
 }
 
@@ -39,6 +43,7 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 	type ResponseBody struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
+		LeftDays     int    `json:"left_days"`
 	}
 	var request RequestBody
 	err := c.BindJSON(&request)
@@ -52,10 +57,29 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	userID, err := ah.UserService.Login(request.IDToken)
+	userID, isNewUser, err := ah.UserService.Login(request.IDToken)
 	if err != nil {
+		glog.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
+	}
+
+	if isNewUser {
+		// Subscibe to the initial plan
+		initialPlanID, err := ah.SubscriptionService.GetSignupPlanID()
+		if err != nil {
+			glog.Error(err)
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+		err = ah.SubscriptionService.CreateSubscripton(
+			userID, initialPlanID,
+		)
+		if err != nil {
+			glog.Error(err)
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	resp := ResponseBody{
