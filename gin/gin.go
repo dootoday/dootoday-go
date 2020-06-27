@@ -33,6 +33,11 @@ func (g *GinService) Run() {
 	{
 		v1.POST("/login", g.AuthHandler.Login)
 		v1.POST("/refresh", g.AuthHandler.Refresh)
+
+		v1.POST("/apply-promo",
+			g.AuthHandler.AuthMiddleware,
+			g.AuthHandler.ApplyPromo,
+		)
 	}
 
 	r.Run(fmt.Sprintf(":%d", config.ServerPort)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")

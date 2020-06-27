@@ -43,12 +43,21 @@ func (ss *SubscriptionService) GetPlanByID(planID uint) (Plan, error) {
 	return plan, err
 }
 
+// GetPlanByCode :
+func (ss *SubscriptionService) GetPlanByCode(code string) (Plan, error) {
+	plan := Plan{}
+	err := ss.DB.Where("promo_code=?", code).Last(&plan).Error
+	return plan, err
+}
+
 // GetUserSubscriptionsByPlanID :
 func (ss *SubscriptionService) GetUserSubscriptionsByPlanID(
+	userID uint,
 	planID uint,
 ) ([]Subscription, error) {
 	subs := []Subscription{}
-	err := ss.DB.Where("plan_id=?", planID).Find(&subs).Error
+	err := ss.DB.Where("user_id=? AND plan_id=?", userID, planID).
+		Find(&subs).Error
 	return subs, err
 }
 
@@ -59,14 +68,14 @@ func (ss *SubscriptionService) CreateSubscripton(userID uint, planID uint) error
 		glog.Error(err)
 		return err
 	}
-	subs, err := ss.GetUserSubscriptionsByPlanID(planID)
+	subs, err := ss.GetUserSubscriptionsByPlanID(userID, planID)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			glog.Error(err)
 			return err
 		}
 	}
-	if plan.UseAllowed > 0 && plan.UseAllowed < len(subs) {
+	if plan.UseAllowed > 0 && plan.UseAllowed <= len(subs) {
 		return errors.New("The plan is not valid")
 	}
 
@@ -109,19 +118,27 @@ func (ss *SubscriptionService) CreateSubscripton(userID uint, planID uint) error
 // DaysLeftForUser : this function gives the number days left
 // for the user
 func (ss *SubscriptionService) DaysLeftForUser(userID uint) (int, error) {
-	subs := []Subscription{}
+	sub := Subscription{}
 	now := time.Now()
 	err := ss.DB.Where("user_id=? AND end_date>=?", userID, now).
-		Find(&subs).Error
+		Order("end_date desc").
+		First(&sub).Error
 	if err != nil {
 		glog.Error(err)
 		return 0, err
 	}
-	totalDays := 0
-	for _, sub := range subs {
-		days := int(sub.EndDate.Sub(now).Hours() / 24)
-		totalDays = totalDays + days
-	}
+	days := int(sub.EndDate.Sub(now).Hours() / 24)
+
 	// 1 day buffer always
-	return totalDays + 1, nil
+	return days + 1, nil
+}
+
+// ApplyPromo : this function applies the promo code
+func (ss *SubscriptionService) ApplyPromo(userID uint, code string) error {
+	plan, err := ss.GetPlanByCode(code)
+	if err != nil {
+		glog.Error(err)
+		return err
+	}
+	return ss.CreateSubscripton(userID, plan.ID)
 }

@@ -7,6 +7,7 @@ import (
 	userservice "apidootoday/user"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
@@ -33,6 +34,44 @@ func NewAuthHandler(
 		GAuthService:        gauthService,
 		SubscriptionService: subService,
 	}
+}
+
+// AuthMiddleware :
+func (ah *AuthHandler) AuthMiddleware(c *gin.Context) {
+	type AuthHeader struct {
+		Authorization string `header:"Authorization"`
+	}
+	var reqHeader AuthHeader
+	err := c.BindHeader(&reqHeader)
+	if reqHeader.Authorization == "" {
+		glog.Error("Auth header missing")
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{"error": "authorization header missing"},
+		)
+		return
+	}
+	token := strings.Split(reqHeader.Authorization, " ")
+	tok := token[len(token)-1]
+	valid, err := ah.TokenService.IsTokenValid(
+		tok, jwtservice.AccessTokenType,
+	)
+	if !valid {
+		glog.Error("Invalid auth token")
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{"error": "invalid auth token"},
+		)
+		return
+	}
+	userID, err := ah.TokenService.GetUserIDFromToken(tok)
+	if err != nil {
+		glog.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.Set("user_id", userID)
+	c.Next()
 }
 
 // Login : login handler
@@ -140,4 +179,45 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 		LeftDays:    leftDays,
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+// ApplyPromo : refresh token
+func (ah *AuthHandler) ApplyPromo(c *gin.Context) {
+	type RequestBody struct {
+		PromoCode string `json:"code"`
+	}
+	var request RequestBody
+	err := c.BindJSON(&request)
+	if err != nil || request.PromoCode == "" {
+		glog.Error("Promo code is missing")
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "code is missing"},
+		)
+		return
+	}
+
+	// this was set in context from auth middleware
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+
+	err = ah.SubscriptionService.ApplyPromo(userID.(uint), request.PromoCode)
+	if err != nil {
+		glog.Error(err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	c.Status(http.StatusOK)
+	return
 }
