@@ -32,3 +32,10 @@ serverPort:  "9060"               # Port to run this api on
 
 accessTokenSecret: "access-this-is-a-very-secret-string"
 refreshTokenSecret: "refresh-this-is-a-very-secret-string"
+
+##################################
+# RAZORPAY API KEY               #
+##################################
+
+razorpayKey: "rzp_test_oW4N8eXjSQAzY8"
+razorpaySecret: "ds1XkOEFtZQ8BsdAkPN4Nh5n"

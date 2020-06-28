@@ -22,13 +22,13 @@ type Plan struct {
 	Name               string `gorm:"type:varchar(20);unique;not null"`
 	Description        string `gorm:"type:varchar(120);"`
 	DurationInDays     int
-	PromoCode          string `gorm:"type:varchar(15);`
+	PromoCode          string `gorm:"type:varchar(15);"`
 	AmountInCents      int
 	OfferAmountInCents int
 	Display            bool
 	Active             bool
 	UseAllowed         int
-	PlanType           string `gorm:"type:varchar(15);`
+	PlanType           string `gorm:"type:varchar(15);"`
 }
 
 // Migrate : This is the db migrate function for

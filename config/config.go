@@ -46,6 +46,12 @@ var (
 	// DbPort : port for the db
 	DbPort string
 
+	// RPApiKey : API Key for RazorPay
+	RPApiKey string
+
+	// RPApiSecret : API Key for RazorPay
+	RPApiSecret string
+
 	// Environment : dev environment, production, docker, etc
 	Environment AppEnvironment
 
@@ -110,6 +116,9 @@ func SetSettingsFromViper() {
 	DbPassword = os.Getenv("DB_PASSWORD")
 	glog.Info("Db settings: ", DbDriver, " ", DbHostName, " ", DbName)
 
+	RPApiKey = os.Getenv("RP_API_KEY")
+	RPApiSecret = os.Getenv("RP_API_SECRET")
+
 	AccessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
 	RefreshTokenSecret = os.Getenv("REFRESH_TOKEN_SECRET")
 
@@ -150,6 +159,8 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	dbUser := viper.GetString("dbUsername")
 	dbName := viper.GetString("dbName")
 	dbTestDBName := viper.GetString("testDbName")
+	rpAPIKey := viper.GetString("razorpayKey")
+	rpAPISecret := viper.GetString("razorpaySecret")
 
 	// Set the OS Environment variables
 	os.Setenv("DB_DRIVER", dbDriver)
@@ -162,6 +173,8 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	os.Setenv("DEBUG", strconv.FormatBool(debug))
 	os.Setenv("SERVER_HOSTNAME", serverHostName)
 	os.Setenv("SERVER_PORT", serverPort)
+	os.Setenv("RP_API_KEY", rpAPIKey)
+	os.Setenv("RP_API_SECRET", rpAPISecret)
 	os.Setenv("ACCESS_TOKEN_SECRET", accessTokenSecret)
 	os.Setenv("REFRESH_TOKEN_SECRET", refreshTokenSecret)
 	glog.Info("setEnvironmentVariablesFromConfig: Config finished reading in settings from file.")

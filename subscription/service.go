@@ -62,7 +62,11 @@ func (ss *SubscriptionService) GetUserSubscriptionsByPlanID(
 }
 
 // CreateSubscripton :
-func (ss *SubscriptionService) CreateSubscripton(userID uint, planID uint) error {
+// If dryRun is true it'll do everything but make an entry to the DB
+// It is used to check if an actual createion is going to be sucessful
+func (ss *SubscriptionService) CreateSubscripton(
+	userID uint, planID uint, dryRun bool,
+) error {
 	plan, err := ss.GetPlanByID(planID)
 	if err != nil {
 		glog.Error(err)
@@ -79,7 +83,12 @@ func (ss *SubscriptionService) CreateSubscripton(userID uint, planID uint) error
 		return errors.New("The plan is not valid")
 	}
 
-	// Get las subscription by the user
+	// If it's just a dryRun return from this point
+	if dryRun {
+		return nil
+	}
+
+	// Get last subscription by the user
 	// If the end date is expired then start new
 	// subscription from now else start the new
 	// subscription from after last one ends
@@ -140,5 +149,5 @@ func (ss *SubscriptionService) ApplyPromo(userID uint, code string) error {
 		glog.Error(err)
 		return err
 	}
-	return ss.CreateSubscripton(userID, plan.ID)
+	return ss.CreateSubscripton(userID, plan.ID, false)
 }
