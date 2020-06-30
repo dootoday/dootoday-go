@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,6 +24,7 @@ func NewGinService(authHandler *AuthHandler) *GinService {
 // Run is the function to run the gin server
 func (g *GinService) Run() {
 	r := gin.Default()
+	r.Use(cors.Default())
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -39,6 +41,5 @@ func (g *GinService) Run() {
 			g.AuthHandler.ApplyPromo,
 		)
 	}
-
 	r.Run(fmt.Sprintf(":%d", config.ServerPort)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

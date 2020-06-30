@@ -1,7 +1,7 @@
 package main
 
 import (
-	// ginservice "apidootoday/gin"
+	ginservice "apidootoday/gin"
 	gauthservice "apidootoday/googleauth"
 	"apidootoday/gorm"
 	jwtservice "apidootoday/jwtservice"
@@ -38,14 +38,12 @@ func main() {
 		glog.Fatal("Having some problem with migrating orders", err)
 	}
 
-	order.CreateNewOrder(2, 1, 2000)
-
-	// authHandlers := ginservice.NewAuthHandler(
-	// 	us, tokenService, gauthService, subscription,
-	// )
-	// ginService := ginservice.NewGinService(authHandlers)
-	// // Run gin
-	// ginService.Run()
+	authHandlers := ginservice.NewAuthHandler(
+		us, tokenService, gauthService, subscription,
+	)
+	ginService := ginservice.NewGinService(authHandlers)
+	// Run gin
+	ginService.Run()
 
 	defer db.Close()
 }

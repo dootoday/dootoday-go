@@ -112,7 +112,7 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 			return
 		}
 		err = ah.SubscriptionService.CreateSubscripton(
-			userID, initialPlanID,
+			userID, initialPlanID, false,
 		)
 		if err != nil {
 			glog.Error(err)

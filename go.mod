@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/brianvoe/sjwt v0.5.1
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
