@@ -160,7 +160,7 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 	if !valid {
-		c.JSON(http.StatusForbidden, errors.New("Refresh token is not valid"))
+		c.JSON(http.StatusUnauthorized, errors.New("Refresh token is not valid"))
 		return
 	}
 	userID, err := ah.TokenService.GetUserIDFromToken(request.RefreshToken)
