@@ -43,9 +43,15 @@ func (us *UserService) UserExists(user *User) (bool, error) {
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil
-		} else {
-			return false, err
 		}
+		return false, err
 	}
 	return true, nil
+}
+
+// GetUserByID :
+func (us *UserService) GetUserByID(userID uint) (*User, error) {
+	var user User
+	err := us.DB.Where("id=?", userID).Find(&user).Error
+	return &user, err
 }

@@ -38,6 +38,7 @@ func NewAuthHandler(
 
 // AuthMiddleware :
 func (ah *AuthHandler) AuthMiddleware(c *gin.Context) {
+	// setting header for auth
 	type AuthHeader struct {
 		Authorization string `header:"Authorization"`
 	}
@@ -220,4 +221,43 @@ func (ah *AuthHandler) ApplyPromo(c *gin.Context) {
 	}
 	c.Status(http.StatusOK)
 	return
+}
+
+// GetUser : get ser details
+func (ah *AuthHandler) GetUser(c *gin.Context) {
+	type ResponseBody struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		Avatar    string `json:"avatar"`
+	}
+
+	// this was set in context from auth middleware
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+
+	user, err := ah.UserService.GetUserByID(userID.(uint))
+	if err != nil {
+		glog.Error(err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	resp := ResponseBody{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+	}
+	c.JSON(http.StatusOK, resp)
 }
