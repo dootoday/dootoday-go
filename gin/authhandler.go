@@ -83,7 +83,6 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 	type ResponseBody struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
-		LeftDays     int    `json:"left_days"`
 	}
 	var request RequestBody
 	err := c.BindJSON(&request)
@@ -121,15 +120,8 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 			return
 		}
 	}
-	leftDays, err := ah.SubscriptionService.DaysLeftForUser(userID)
-	if err != nil {
-		glog.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
 	resp := ResponseBody{
 		AccessToken:  ah.TokenService.GetAccessToken(userID),
-		LeftDays:     leftDays,
 		RefreshToken: ah.TokenService.GetRefreshToken(userID),
 	}
 
@@ -143,7 +135,6 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 	}
 	type ResponseBody struct {
 		AccessToken string `json:"access_token"`
-		LeftDays    int    `json:"left_days"`
 	}
 	var request RequestBody
 	err := c.BindJSON(&request)
@@ -169,15 +160,8 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	leftDays, err := ah.SubscriptionService.DaysLeftForUser(userID)
-	if err != nil {
-		glog.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
 	resp := ResponseBody{
 		AccessToken: ah.TokenService.GetAccessToken(userID),
-		LeftDays:    leftDays,
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -230,6 +214,7 @@ func (ah *AuthHandler) GetUser(c *gin.Context) {
 		LastName  string `json:"last_name"`
 		Email     string `json:"email"`
 		Avatar    string `json:"avatar"`
+		LeftDays  int    `json:"left_days"`
 	}
 
 	// this was set in context from auth middleware
@@ -253,11 +238,18 @@ func (ah *AuthHandler) GetUser(c *gin.Context) {
 		)
 		return
 	}
+	leftDays, err := ah.SubscriptionService.DaysLeftForUser(user.ID)
+	if err != nil {
+		glog.Error(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
 	resp := ResponseBody{
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
 		Avatar:    user.Avatar,
+		LeftDays:  leftDays,
 	}
 	c.JSON(http.StatusOK, resp)
 }
