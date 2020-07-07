@@ -110,6 +110,11 @@ func (ts *TaskService) UpdateTaskStatus(
 	return err
 }
 
+// DeleteTaskByID :
+func (ts *TaskService) DeleteTaskByID(taskID uint) error {
+	return ts.DB.Where("id=?", taskID).Delete(&Task{}).Error
+}
+
 // ReposTaskDate :
 func (ts *TaskService) ReposTaskDate(
 	taskIDs []uint, date time.Time,
@@ -162,4 +167,33 @@ func (ts *TaskService) CreateColumn(userID uint, name string) (uint, error) {
 		return uint(0), err
 	}
 	return newcol.ID, err
+}
+
+// GetColumnsByUserID :
+func (ts *TaskService) GetColumnsByUserID(userID uint) ([]Column, error) {
+	var columns []Column
+	err := ts.DB.Where("user_id=?", userID).Find(&columns).Error
+	return columns, err
+}
+
+// GetColumnByID :
+func (ts *TaskService) GetColumnByID(colID uint) (Column, error) {
+	var column Column
+	err := ts.DB.Where("id=?", colID).Find(&column).Error
+	return column, err
+}
+
+// UpdateColumn :
+func (ts *TaskService) UpdateColumn(columnID uint, name string) error {
+	column, err := ts.GetColumnByID(columnID)
+	if err != nil {
+		return err
+	}
+	err = ts.DB.Model(&column).Update(map[string]interface{}{"name": name}).Error
+	return err
+}
+
+// DeleteColumn :
+func (ts *TaskService) DeleteColumn(colID uint) error {
+	return ts.DB.Where("id=?", colID).Delete(&Column{}).Error
 }
