@@ -11,12 +11,17 @@ import (
 // GinService :
 type GinService struct {
 	AuthHandler *AuthHandler
+	TaskHandler *TaskHandler
 }
 
 // NewGinService :
-func NewGinService(authHandler *AuthHandler) *GinService {
+func NewGinService(
+	authHandler *AuthHandler,
+	taskHandler *TaskHandler,
+) *GinService {
 	return &GinService{
 		AuthHandler: authHandler,
+		TaskHandler: taskHandler,
 	}
 }
 
@@ -60,6 +65,11 @@ func (g *GinService) Run() {
 		v1.GET("/user",
 			g.AuthHandler.AuthMiddleware,
 			g.AuthHandler.GetUser,
+		)
+
+		v1.POST("/createtask",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.CreateTask,
 		)
 	}
 	r.Run(fmt.Sprintf(":%d", config.ServerPort)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
