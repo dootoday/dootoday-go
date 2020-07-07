@@ -71,6 +71,15 @@ func (ah *AuthHandler) AuthMiddleware(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	_, err = ah.UserService.GetUserByID(userID)
+	if err != nil {
+		glog.Error(err)
+		c.JSON(
+			http.StatusUnauthorized,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
 	c.Set("user_id", userID)
 	c.Next()
 }
