@@ -221,6 +221,9 @@ func (ts *TaskDBService) CreateColumn(userID uint, name string) (Column, error) 
 func (ts *TaskDBService) GetColumnsByUserID(userID uint) ([]Column, error) {
 	var columns []Column
 	err := ts.DB.Where("user_id=?", userID).Find(&columns).Error
+	if err == gorm.ErrRecordNotFound {
+		err = nil
+	}
 	return columns, err
 }
 
