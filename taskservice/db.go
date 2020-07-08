@@ -203,17 +203,18 @@ func (ts *TaskDBService) ReposTaskColumn(
 }
 
 // CreateColumn :
-func (ts *TaskDBService) CreateColumn(userID uint, name string) (uint, error) {
+func (ts *TaskDBService) CreateColumn(userID uint, name string) (Column, error) {
 	newuuid := uuid.New().String()
 	newcol := Column{
-		UUID: newuuid,
-		Name: name,
+		UUID:   newuuid,
+		Name:   name,
+		UserID: userID,
 	}
 	err := ts.DB.Create(&newcol).Error
 	if err != nil {
-		return uint(0), err
+		return Column{}, err
 	}
-	return newcol.ID, err
+	return newcol, err
 }
 
 // GetColumnsByUserID :
