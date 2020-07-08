@@ -67,9 +67,19 @@ func (g *GinService) Run() {
 			g.AuthHandler.GetUser,
 		)
 
-		v1.POST("/createtask",
+		v1.POST("/task",
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.CreateTask,
+		)
+
+		v1.POST("/column",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.CreateColumn,
+		)
+
+		v1.POST("/column/:col_id",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.UpdateColumn,
 		)
 	}
 	r.Run(fmt.Sprintf(":%d", config.ServerPort)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")

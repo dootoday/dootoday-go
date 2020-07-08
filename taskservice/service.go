@@ -59,3 +59,20 @@ func (ts *TaskService) CreateTask(
 	}
 	return ts.TDS.CreateTaskOnDate(markdown, isDone, userID, formattedDate)
 }
+
+// CreateColumn :
+func (ts *TaskService) CreateColumn(userID uint, name string) (Column, error) {
+	return ts.TDS.CreateColumn(userID, name)
+}
+
+// UpdateColumn :
+func (ts *TaskService) UpdateColumn(colUUID string, name string, userID uint) error {
+	col, err := ts.TDS.GetColumnByUUID(colUUID)
+	if err != nil {
+		return ErrColumnNotFound
+	}
+	if col.UserID != userID {
+		return ErrColumnNotFound
+	}
+	return ts.TDS.UpdateColumn(col.ID, name)
+}
