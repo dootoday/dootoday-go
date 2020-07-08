@@ -76,3 +76,25 @@ func (ts *TaskService) UpdateColumn(colUUID string, name string, userID uint) er
 	}
 	return ts.TDS.UpdateColumn(col.ID, name)
 }
+
+// DeleteColumn :
+func (ts *TaskService) DeleteColumn(colUUID string, userID uint) error {
+	col, err := ts.TDS.GetColumnByUUID(colUUID)
+	if err != nil {
+		return ErrColumnNotFound
+	}
+	if col.UserID != userID {
+		return ErrColumnNotFound
+	}
+	return ts.TDS.DeleteColumn(col.ID)
+}
+
+// GetColumns :
+func (ts *TaskService) GetColumns(userID uint) ([]Column, error) {
+	return ts.TDS.GetColumnsByUserID(userID)
+}
+
+// GetTasksByColumnID :
+func (ts *TaskService) GetTasksByColumnID(colID uint) ([]Task, error) {
+	return ts.TDS.GetTasksByColumn(colID)
+}

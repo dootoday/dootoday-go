@@ -81,6 +81,16 @@ func (g *GinService) Run() {
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.UpdateColumn,
 		)
+
+		v1.DELETE("/column/:col_id",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.DeleteColumn,
+		)
+
+		v1.GET("/columns",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.GetColumns,
+		)
 	}
 	r.Run(fmt.Sprintf(":%d", config.ServerPort)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
