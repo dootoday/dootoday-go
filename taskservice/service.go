@@ -17,6 +17,9 @@ var (
 
 	// ErrTaskNotFound : Error when task is not found
 	ErrTaskNotFound = errors.New("Task not found")
+
+	// ErrTaskRepos : Error when task is repositioned
+	ErrTaskRepos = errors.New("Task not repositioned")
 )
 
 // TaskService :
@@ -177,7 +180,42 @@ func (ts *TaskService) GetDateRange(fromDate string, toDate string) ([]time.Time
 	return output, nil
 }
 
+// FormatDate :
+func (ts *TaskService) FormatDate(date string) (time.Time, error) {
+	return time.Parse("2006-01-02", date)
+}
+
 // GetTasksByDate :
 func (ts *TaskService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
 	return ts.TDS.GetTasksByDate(date, userID)
+}
+
+// ReposTaskDate :
+func (ts *TaskService) ReposTaskDate(taskIDs []uint, date time.Time, userID uint) error {
+	err := ts.TDS.VerifyTaskUser(taskIDs, userID)
+	if err != nil {
+		return ErrTaskNotFound
+	}
+	err = ts.TDS.ReposTaskDate(taskIDs, date)
+	if err != nil {
+		return ErrTaskRepos
+	}
+	return nil
+}
+
+// ReposTaskColumn :
+func (ts *TaskService) ReposTaskColumn(taskIDs []uint, colUUID string, userID uint) error {
+	err := ts.TDS.VerifyTaskUser(taskIDs, userID)
+	if err != nil {
+		return ErrTaskNotFound
+	}
+	col, err := ts.GetColumnByUUID(colUUID, userID)
+	if err != nil {
+		return err
+	}
+	err = ts.TDS.ReposTaskColumn(taskIDs, col.ID)
+	if err != nil {
+		return ErrTaskRepos
+	}
+	return nil
 }
