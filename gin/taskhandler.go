@@ -3,6 +3,7 @@ package service
 import (
 	taskservice "apidootoday/taskservice"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -90,6 +91,120 @@ func (th *TaskHandler) CreateTask(c *gin.Context) {
 		Order:      task.Order,
 	}
 	c.JSON(http.StatusOK, taskResp)
+}
+
+// UpdateTask :
+func (th *TaskHandler) UpdateTask(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	tID := c.Param("task_id")
+	taskID, err := strconv.ParseUint(tID, 10, 32)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Invalid task ID"},
+		)
+		return
+	}
+	type RequestBody struct {
+		Markdown string `json:"markdown"`
+		IsDone   bool   `json:"is_done"`
+	}
+	var request RequestBody
+	err = c.BindJSON(&request)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Can not bind the request body"},
+		)
+		return
+	}
+
+	task, err := th.TaskService.UpdateTask(
+		uint(taskID), request.Markdown, request.IsDone, userID.(uint),
+	)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	c.JSON(http.StatusOK, task)
+}
+
+// GetTask :
+func (th *TaskHandler) GetTask(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	tID := c.Param("task_id")
+	taskID, err := strconv.ParseUint(tID, 10, 32)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Invalid task ID"},
+		)
+		return
+	}
+
+	task, err := th.TaskService.GetTaskByID(uint(taskID), userID.(uint))
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	c.JSON(http.StatusOK, task)
+}
+
+// DeleteTask :
+func (th *TaskHandler) DeleteTask(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	tID := c.Param("task_id")
+	taskID, err := strconv.ParseUint(tID, 10, 32)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Invalid task ID"},
+		)
+		return
+	}
+
+	err = th.TaskService.DeleteTask(uint(taskID), userID.(uint))
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": "ok"})
 }
 
 // CreateColumn :

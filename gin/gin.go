@@ -72,6 +72,21 @@ func (g *GinService) Run() {
 			g.TaskHandler.CreateTask,
 		)
 
+		v1.POST("/task/:task_id",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.UpdateTask,
+		)
+
+		v1.GET("/task/:task_id",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.GetTask,
+		)
+
+		v1.DELETE("/task/:task_id",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.DeleteTask,
+		)
+
 		v1.POST("/column",
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.CreateColumn,

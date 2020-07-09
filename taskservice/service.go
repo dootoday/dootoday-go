@@ -14,6 +14,9 @@ var (
 
 	// ErrInvalidDateFormat : Error when date format is invalid
 	ErrInvalidDateFormat = errors.New("Date format is invalid")
+
+	// ErrTaskNotFound : Error when task is not found
+	ErrTaskNotFound = errors.New("Task not found")
 )
 
 // TaskService :
@@ -58,6 +61,52 @@ func (ts *TaskService) CreateTask(
 		formattedDate, _ = time.Parse("2006-01-02", time.Now().Format("2006-01-02"))
 	}
 	return ts.TDS.CreateTaskOnDate(markdown, isDone, userID, formattedDate)
+}
+
+// GetTaskByID :
+func (ts *TaskService) GetTaskByID(taskID uint, userID uint) (Task, error) {
+	task, err := ts.TDS.GetTaskByID(taskID)
+	if err != nil || task.UserID != userID {
+		return task, ErrTaskNotFound
+	}
+	return task, err
+}
+
+// DeleteTask :
+func (ts *TaskService) DeleteTask(taskID uint, userID uint) error {
+	task, err := ts.GetTaskByID(taskID, userID)
+	if err != nil {
+		return err
+	}
+	err = ts.TDS.DeleteTaskByID(task.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateTask :
+func (ts *TaskService) UpdateTask(
+	taskID uint, markdown string, isDone bool, userID uint,
+) (Task, error) {
+	task, err := ts.GetTaskByID(taskID, userID)
+	if err != nil {
+		return task, err
+	}
+	if task.Markdown != markdown && markdown != "" {
+		err = ts.TDS.UpdateTaskValue(task.ID, markdown)
+		if err != nil {
+			return task, err
+		}
+	}
+	if task.Done != isDone {
+		err = ts.TDS.UpdateTaskStatus(task.ID, isDone)
+		if err != nil {
+			return task, err
+		}
+	}
+	// ToDo : Need a better approach here
+	return ts.GetTaskByID(taskID, userID)
 }
 
 // CreateColumn :
