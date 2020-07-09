@@ -156,6 +156,28 @@ func (ts *TaskService) GetColumnByUUID(uuid string, userID uint) (Column, error)
 }
 
 // GetTasksByColumnID :
-func (ts *TaskService) GetTasksByColumnID(colID uint) ([]Task, error) {
-	return ts.TDS.GetTasksByColumn(colID)
+func (ts *TaskService) GetTasksByColumnID(colID uint, userID uint) ([]Task, error) {
+	return ts.TDS.GetTasksByColumn(colID, userID)
+}
+
+// GetDateRange  :
+func (ts *TaskService) GetDateRange(fromDate string, toDate string) ([]time.Time, error) {
+	var output []time.Time
+	formattedFromDate, err := time.Parse("2006-01-02", fromDate)
+	if err != nil {
+		return output, ErrInvalidDateFormat
+	}
+	formattedToDate, err := time.Parse("2006-01-02", toDate)
+	if err != nil {
+		return output, ErrInvalidDateFormat
+	}
+	for i := formattedFromDate; i.Before(formattedToDate.Add(time.Hour * 24)); i = i.Add(time.Hour * 24) {
+		output = append(output, i)
+	}
+	return output, nil
+}
+
+// GetTasksByDate :
+func (ts *TaskService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
+	return ts.TDS.GetTasksByDate(date, userID)
 }

@@ -34,9 +34,10 @@ type TaskResponse struct {
 
 // ColumnResponse :
 type ColumnResponse struct {
-	UUID  string         `json:"id"`
-	Name  string         `json:"name"`
-	Tasks []TaskResponse `json:"tasks"`
+	UUID     string         `json:"id"`
+	Name     string         `json:"name"`
+	MetaText string         `json:"meta"`
+	Tasks    []TaskResponse `json:"tasks"`
 }
 
 // CreateTask :
@@ -343,7 +344,7 @@ func (th *TaskHandler) GetColumns(c *gin.Context) {
 	colresp := []ColumnResponse{}
 
 	for _, col := range cols {
-		tasks, err := th.TaskService.GetTasksByColumnID(col.ID)
+		tasks, err := th.TaskService.GetTasksByColumnID(col.ID, userID.(uint))
 		if err != nil {
 			c.JSON(
 				http.StatusInternalServerError,
@@ -400,7 +401,7 @@ func (th *TaskHandler) GetColumn(c *gin.Context) {
 		)
 		return
 	}
-	tasks, err := th.TaskService.GetTasksByColumnID(col.ID)
+	tasks, err := th.TaskService.GetTasksByColumnID(col.ID, userID.(uint))
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -429,4 +430,91 @@ func (th *TaskHandler) GetColumn(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, colresp)
+}
+
+// GetTasks :
+func (th *TaskHandler) GetTasks(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	type RequestBody struct {
+		From string `form:"from"`
+		To   string `form:"to"`
+	}
+	var request RequestBody
+	err := c.Bind(&request)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Invalid data"},
+		)
+		return
+	}
+	if request.From == "" {
+		glog.Error("From date is missing")
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "From date is missing"},
+		)
+		return
+	}
+	if request.To == "" {
+		glog.Error("To date is missing")
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "To date is missing"},
+		)
+		return
+	}
+	dates, err := th.TaskService.GetDateRange(request.From, request.To)
+	if err != nil {
+		glog.Error("Something  is wrong with date range", err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Can not find a date range"},
+		)
+		return
+	}
+	colResp := []ColumnResponse{}
+	for _, date := range dates {
+		tasks, err := th.TaskService.GetTasksByDate(date, userID.(uint))
+		if err != nil {
+			glog.Error("Could not fetch tasks for the date - ", err)
+			c.JSON(
+				http.StatusBadGateway,
+				gin.H{"error": "Could not fetch tasks for the date"},
+			)
+			return
+		}
+		taskResp := []TaskResponse{}
+		for _, task := range tasks {
+			taskResp = append(
+				taskResp,
+				TaskResponse{
+					ID:       task.ID,
+					Markdown: task.Markdown,
+					IsDone:   task.Done,
+					Date:     task.Date,
+					Order:    task.Order,
+				},
+			)
+		}
+		colResp = append(
+			colResp,
+			ColumnResponse{
+				Name:     date.Format("2006-01-02"),
+				MetaText: date.Weekday().String(),
+				UUID:     date.Format("2006-01-02"),
+				Tasks:    taskResp,
+			},
+		)
+	}
+	c.JSON(http.StatusOK, colResp)
 }
