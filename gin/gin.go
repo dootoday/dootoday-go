@@ -87,6 +87,11 @@ func (g *GinService) Run() {
 			g.TaskHandler.DeleteColumn,
 		)
 
+		v1.GET("/column/:col_id",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.GetColumn,
+		)
+
 		v1.GET("/columns",
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.GetColumns,

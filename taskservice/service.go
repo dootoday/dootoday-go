@@ -94,6 +94,18 @@ func (ts *TaskService) GetColumns(userID uint) ([]Column, error) {
 	return ts.TDS.GetColumnsByUserID(userID)
 }
 
+// GetColumnByUUID :
+func (ts *TaskService) GetColumnByUUID(uuid string, userID uint) (Column, error) {
+	col, err := ts.TDS.GetColumnByUUID(uuid)
+	if err != nil {
+		return col, err
+	}
+	if col.UserID != userID {
+		return col, ErrColumnNotFound
+	}
+	return col, err
+}
+
 // GetTasksByColumnID :
 func (ts *TaskService) GetTasksByColumnID(colID uint) ([]Task, error) {
 	return ts.TDS.GetTasksByColumn(colID)

@@ -193,10 +193,6 @@ func (th *TaskHandler) DeleteColumn(c *gin.Context) {
 
 	colUUID := c.Param("col_id")
 
-	type RequestBody struct {
-		Name string `json:"name"`
-	}
-
 	err := th.TaskService.DeleteColumn(colUUID, userID.(uint))
 	if err != nil {
 		c.JSON(
@@ -262,6 +258,59 @@ func (th *TaskHandler) GetColumns(c *gin.Context) {
 				Tasks: taskresp,
 			},
 		)
+	}
+
+	c.JSON(http.StatusOK, colresp)
+}
+
+// GetColumn :
+func (th *TaskHandler) GetColumn(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	colUUID := c.Param("col_id")
+
+	col, err := th.TaskService.GetColumnByUUID(colUUID, userID.(uint))
+	if err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	tasks, err := th.TaskService.GetTasksByColumnID(col.ID)
+	if err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	taskresp := []TaskResponse{}
+	for _, task := range tasks {
+		taskresp = append(
+			taskresp,
+			TaskResponse{
+				ID:         task.ID,
+				Markdown:   task.Markdown,
+				IsDone:     task.Done,
+				ColumnUUID: col.UUID,
+				Date:       task.Date,
+				Order:      task.Order,
+			},
+		)
+	}
+	colresp := ColumnResponse{
+		UUID:  col.UUID,
+		Name:  col.Name,
+		Tasks: taskresp,
 	}
 
 	c.JSON(http.StatusOK, colresp)
