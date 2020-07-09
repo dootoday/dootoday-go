@@ -10,6 +10,8 @@ import (
 	ts "apidootoday/taskservice"
 	userservice "apidootoday/user"
 
+	"apidootoday/config"
+
 	"github.com/golang/glog"
 )
 
@@ -18,7 +20,7 @@ func main() {
 	if err != nil {
 		glog.Fatal("Having trouble connecting the database", err)
 	}
-
+	db.LogMode(config.Debug)
 	tokenService := jwtservice.NewTokenService()
 	gauthService := gauthservice.NewGoogleAuthService()
 	us := userservice.NewUserService(db, tokenService, gauthService)

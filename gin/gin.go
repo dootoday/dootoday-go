@@ -44,6 +44,9 @@ func CORSMiddleware() gin.HandlerFunc {
 
 // Run is the function to run the gin server
 func (g *GinService) Run() {
+	if config.Debug {
+		gin.SetMode(gin.DebugMode)
+	}
 	r := gin.Default()
 	r.Use(CORSMiddleware())
 	r.GET("/ping", func(c *gin.Context) {
@@ -85,6 +88,11 @@ func (g *GinService) Run() {
 		v1.DELETE("/task/:task_id",
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.DeleteTask,
+		)
+
+		v1.GET("/tasks",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.GetTasks,
 		)
 
 		v1.POST("/column",

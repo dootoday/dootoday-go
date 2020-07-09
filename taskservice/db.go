@@ -59,7 +59,7 @@ func (ts *TaskDBService) CreateTaskOnColumn(
 	markdown string, isDone bool, userID uint, columnID uint,
 ) (Task, error) {
 	order := 1
-	tasks, err := ts.GetTasksByColumn(columnID)
+	tasks, err := ts.GetTasksByColumn(columnID, userID)
 	if err != nil {
 		return Task{}, err
 	}
@@ -80,7 +80,7 @@ func (ts *TaskDBService) CreateTaskOnDate(
 	markdown string, isDone bool, userID uint, date time.Time,
 ) (Task, error) {
 	order := 1
-	tasks, err := ts.GetTasksByDate(date)
+	tasks, err := ts.GetTasksByDate(date, userID)
 	if err != nil {
 		return Task{}, err
 	}
@@ -97,9 +97,9 @@ func (ts *TaskDBService) CreateTaskOnDate(
 }
 
 // GetTasksByColumn :
-func (ts *TaskDBService) GetTasksByColumn(columnID uint) ([]Task, error) {
+func (ts *TaskDBService) GetTasksByColumn(columnID uint, userID uint) ([]Task, error) {
 	var tasks []Task
-	err := ts.DB.Where("column_id=?", columnID).Order("order").Find(&tasks).Error
+	err := ts.DB.Where("column_id=? AND user_id=?", columnID, userID).Order("order").Find(&tasks).Error
 	if err == gorm.ErrRecordNotFound {
 		err = nil
 	}
@@ -107,9 +107,9 @@ func (ts *TaskDBService) GetTasksByColumn(columnID uint) ([]Task, error) {
 }
 
 // GetTasksByDate :
-func (ts *TaskDBService) GetTasksByDate(date time.Time) ([]Task, error) {
+func (ts *TaskDBService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
 	var tasks []Task
-	err := ts.DB.Where("date=?", date).Order("order").Find(&tasks).Error
+	err := ts.DB.Where("date=? AND user_id=?", date, userID).Order("order").Find(&tasks).Error
 	if err == gorm.ErrRecordNotFound {
 		err = nil
 	}
