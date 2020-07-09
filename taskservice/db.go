@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang/glog"
@@ -160,6 +161,19 @@ func (ts *TaskDBService) UpdateTaskStatus(
 // DeleteTaskByID :
 func (ts *TaskDBService) DeleteTaskByID(taskID uint) error {
 	return ts.DB.Where("id=?", taskID).Delete(&Task{}).Error
+}
+
+// VerifyTaskUser :
+func (ts *TaskDBService) VerifyTaskUser(taskIDs []uint, userID uint) error {
+	tasks := []Task{}
+	err := ts.DB.Where("id IN (?) AND user_id=?", taskIDs, userID).Find(&tasks).Error
+	if err != nil {
+		return err
+	}
+	if len(tasks) != len(taskIDs) {
+		return errors.New("Forbidden task ID")
+	}
+	return nil
 }
 
 // ReposTaskDate :

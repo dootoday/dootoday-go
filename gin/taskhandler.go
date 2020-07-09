@@ -518,3 +518,71 @@ func (th *TaskHandler) GetTasks(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, colResp)
 }
+
+// ReposTask :
+func (th *TaskHandler) ReposTask(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+
+	type RequestBody struct {
+		ColumnUUID string `json:"column_id"`
+		Date       string `json:"date"`
+		TaskIDs    []uint `json:"task_ids"`
+	}
+
+	var request RequestBody
+	err := c.BindJSON(&request)
+	if err != nil || (request.ColumnUUID == "" && request.Date == "") {
+		glog.Error("column_id or date is needed", err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "column_id or date is needed"},
+		)
+		return
+	}
+
+	if request.Date != "" {
+		date, err := th.TaskService.FormatDate(request.Date)
+		if err != nil {
+			c.JSON(
+				http.StatusBadRequest,
+				gin.H{"error": "Date format is invalid"},
+			)
+			return
+		}
+		err = th.TaskService.ReposTaskDate(
+			request.TaskIDs,
+			date,
+			userID.(uint),
+		)
+		if err != nil {
+			c.JSON(
+				http.StatusBadGateway,
+				gin.H{"error": "Could not resposition the task"},
+			)
+			return
+		}
+	} else {
+		err = th.TaskService.ReposTaskColumn(
+			request.TaskIDs,
+			request.ColumnUUID,
+			userID.(uint),
+		)
+		if err != nil {
+			c.JSON(
+				http.StatusBadGateway,
+				gin.H{"error": "Could not resposition the task"},
+			)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"success": "ok"})
+}
