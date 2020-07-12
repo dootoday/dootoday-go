@@ -185,6 +185,14 @@ func (ts *TaskService) FormatDate(date string) (time.Time, error) {
 	return time.Parse("2006-01-02", date)
 }
 
+// FormatDateToString :
+func (ts *TaskService) FormatDateToString(date *time.Time) string {
+	if date != nil {
+		return date.Format("2006-01-02")
+	}
+	return ""
+}
+
 // GetTasksByDate :
 func (ts *TaskService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
 	return ts.TDS.GetTasksByDate(date, userID)

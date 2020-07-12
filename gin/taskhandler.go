@@ -4,7 +4,6 @@ import (
 	taskservice "apidootoday/taskservice"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
@@ -24,12 +23,12 @@ func NewTaskHandler(ts *taskservice.TaskService) *TaskHandler {
 
 // TaskResponse :
 type TaskResponse struct {
-	ID         uint       `json:"id"`
-	Markdown   string     `json:"markdown"`
-	IsDone     bool       `json:"is_done"`
-	ColumnUUID string     `json:"column_id"`
-	Date       *time.Time `json:"date"`
-	Order      int        `json:"order"`
+	ID         uint   `json:"id"`
+	Markdown   string `json:"markdown"`
+	IsDone     bool   `json:"is_done"`
+	ColumnUUID string `json:"column_id"`
+	Date       string `json:"date"`
+	Order      int    `json:"order"`
 }
 
 // ColumnResponse :
@@ -88,7 +87,7 @@ func (th *TaskHandler) CreateTask(c *gin.Context) {
 		Markdown:   task.Markdown,
 		IsDone:     task.Done,
 		ColumnUUID: request.ColumnUUID,
-		Date:       task.Date,
+		Date:       th.TaskService.FormatDateToString(task.Date),
 		Order:      task.Order,
 	}
 	c.JSON(http.StatusOK, taskResp)
@@ -361,7 +360,7 @@ func (th *TaskHandler) GetColumns(c *gin.Context) {
 					Markdown:   task.Markdown,
 					IsDone:     task.Done,
 					ColumnUUID: col.UUID,
-					Date:       task.Date,
+					Date:       th.TaskService.FormatDateToString(task.Date),
 					Order:      task.Order,
 				},
 			)
@@ -418,7 +417,7 @@ func (th *TaskHandler) GetColumn(c *gin.Context) {
 				Markdown:   task.Markdown,
 				IsDone:     task.Done,
 				ColumnUUID: col.UUID,
-				Date:       task.Date,
+				Date:       th.TaskService.FormatDateToString(task.Date),
 				Order:      task.Order,
 			},
 		)
@@ -501,7 +500,7 @@ func (th *TaskHandler) GetTasks(c *gin.Context) {
 					ID:       task.ID,
 					Markdown: task.Markdown,
 					IsDone:   task.Done,
-					Date:     task.Date,
+					Date:     th.TaskService.FormatDateToString(task.Date),
 					Order:    task.Order,
 				},
 			)
@@ -509,8 +508,8 @@ func (th *TaskHandler) GetTasks(c *gin.Context) {
 		colResp = append(
 			colResp,
 			ColumnResponse{
-				Name:     date.Format("2006-01-02"),
-				MetaText: date.Weekday().String(),
+				Name:     date.Weekday().String(),
+				MetaText: date.Format("2006-01-02"),
 				UUID:     date.Format("2006-01-02"),
 				Tasks:    taskResp,
 			},
