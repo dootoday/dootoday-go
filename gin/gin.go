@@ -65,6 +65,11 @@ func (g *GinService) Run() {
 			g.AuthHandler.ApplyPromo,
 		)
 
+		v1.GET("/plans",
+			g.AuthHandler.AuthMiddleware,
+			g.AuthHandler.GetPlans,
+		)
+
 		v1.GET("/user",
 			g.AuthHandler.AuthMiddleware,
 			g.AuthHandler.GetUser,

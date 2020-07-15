@@ -30,10 +30,23 @@ func (ss *SubscriptionService) GetSignupPlanID() (uint, error) {
 }
 
 // GetPlansToDisplay :
-func (ss *SubscriptionService) GetPlansToDisplay() ([]Plan, error) {
+func (ss *SubscriptionService) GetPlansToDisplay(userID uint, code string) ([]Plan, error) {
 	plans := []Plan{}
-	err := ss.DB.Where("display=?", true).Find(&plans).Error
-	return plans, err
+	output := []Plan{}
+	err := ss.DB.
+		Where("display=? AND active=? AND promo_code=?", true, true, code).
+		Find(&plans).Error
+	// Check if user has already used any of the plans by allowed number
+	for _, plan := range plans {
+		userSubs, err := ss.GetUserSubscriptionsByPlanID(userID, plan.ID)
+		if err != nil {
+			return output, err
+		}
+		if plan.UseAllowed == 0 || plan.UseAllowed > len(userSubs) {
+			output = append(output, plan)
+		}
+	}
+	return output, err
 }
 
 // GetPlanByID :
