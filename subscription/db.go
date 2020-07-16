@@ -57,15 +57,15 @@ func (us *SubscriptionService) Migrate() error {
 		UseAllowed:         1,
 		PlanType:           "promo",
 	}, {
-		Name:               "30 Days",
+		Name:               "10 Days",
 		Description:        "Apply your promo code",
-		DurationInDays:     30,
-		PromoCode:          "FREE-30",
+		DurationInDays:     10,
+		PromoCode:          "FREE-10",
 		AmountInCents:      0,
 		OfferAmountInCents: 0,
 		Display:            true,
 		Active:             true,
-		UseAllowed:         1,
+		UseAllowed:         0,
 		PlanType:           "promo",
 	}, {
 		Name:               "2 Days",
@@ -76,7 +76,7 @@ func (us *SubscriptionService) Migrate() error {
 		OfferAmountInCents: 0,
 		Display:            true,
 		Active:             true,
-		UseAllowed:         1,
+		UseAllowed:         5,
 		PlanType:           "promo",
 	}, {
 		Name:               "5 Days",
@@ -87,7 +87,7 @@ func (us *SubscriptionService) Migrate() error {
 		OfferAmountInCents: 500,
 		Display:            true,
 		Active:             true,
-		UseAllowed:         1,
+		UseAllowed:         0,
 		PlanType:           "promo",
 	}, {
 		Name:               "1 day",
