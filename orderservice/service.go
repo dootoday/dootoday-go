@@ -47,9 +47,11 @@ func (os *OrderService) CreateNewOrder(
 	}
 	orderID := body["id"].(string)
 	newOrder := Order{
-		RPOrderID: orderID,
-		ReceiptID: receiptID,
-		UserID:    userID,
+		RPOrderID:     orderID,
+		ReceiptID:     receiptID,
+		UserID:        userID,
+		PlanID:        planID,
+		AmountInCents: amountInCents,
 	}
 	err = os.DB.Create(&newOrder).Error
 	if err != nil {
