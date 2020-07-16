@@ -24,7 +24,7 @@ type Plan struct {
 	DurationInDays     int
 	PromoCode          string `gorm:"type:varchar(15);"`
 	AmountInCents      int
-	OfferAmountInCents int
+	OfferAmountInCents int // This is the real amount
 	Display            bool
 	Active             bool
 	UseAllowed         int

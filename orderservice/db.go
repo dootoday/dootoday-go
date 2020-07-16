@@ -12,7 +12,7 @@ type Order struct {
 	PlanID        uint
 	AmountInCents int
 	ReceiptID     string
-	RPOrderID     string
+	RPOrderID     string `gorm:"index:rporder"`
 	RPPaymentID   string
 	RPSignature   string
 }

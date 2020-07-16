@@ -216,69 +216,6 @@ func (ah *AuthHandler) ApplyPromo(c *gin.Context) {
 	return
 }
 
-// GetPlans :
-func (ah *AuthHandler) GetPlans(c *gin.Context) {
-	type RequestBody struct {
-		PromoCode string `form:"code"` // optional
-	}
-	var request RequestBody
-	err := c.Bind(&request)
-	if err != nil {
-		glog.Error("Bad input")
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": "code is missing"},
-		)
-		return
-	}
-
-	// this was set in context from auth middleware
-	userID, ok := c.Get("user_id")
-
-	if !ok {
-		glog.Error("Could not get the user id from context")
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "could not get the user id from context"},
-		)
-		return
-	}
-
-	plans, err := ah.SubscriptionService.GetPlansToDisplay(
-		userID.(uint), request.PromoCode,
-	)
-	if err != nil {
-		glog.Error(err)
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": err.Error()},
-		)
-		return
-	}
-	type ResponseBody struct {
-		ID                 uint   `json:"plan_id"`
-		Name               string `json:"name"`
-		Desc               string `json:"description"`
-		AmountInCents      int    `json:"amount"`
-		OfferAmountInCents int    `json:"offer_amount"`
-	}
-	resp := []ResponseBody{}
-	for _, plan := range plans {
-		resp = append(
-			resp,
-			ResponseBody{
-				ID:                 plan.ID,
-				Name:               plan.Name,
-				Desc:               plan.Description,
-				AmountInCents:      plan.AmountInCents,
-				OfferAmountInCents: plan.OfferAmountInCents,
-			},
-		)
-	}
-	c.JSON(http.StatusOK, resp)
-	return
-}
-
 // GetUser : get ser details
 func (ah *AuthHandler) GetUser(c *gin.Context) {
 	type ResponseBody struct {
