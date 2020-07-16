@@ -38,13 +38,12 @@ func (ss *SubscriptionService) GetPlansToDisplay(userID uint, code string) ([]Pl
 		Find(&plans).Error
 	// Check if user has already used any of the plans by allowed number
 	for _, plan := range plans {
-		userSubs, err := ss.GetUserSubscriptionsByPlanID(userID, plan.ID)
+		// third param true is very important
+		err := ss.CreateSubscripton(userID, plan.ID, true)
 		if err != nil {
 			return output, err
 		}
-		if plan.UseAllowed == 0 || plan.UseAllowed > len(userSubs) {
-			output = append(output, plan)
-		}
+		output = append(output, plan)
 	}
 	return output, err
 }

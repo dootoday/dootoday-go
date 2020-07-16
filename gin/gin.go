@@ -10,18 +10,21 @@ import (
 
 // GinService :
 type GinService struct {
-	AuthHandler *AuthHandler
-	TaskHandler *TaskHandler
+	AuthHandler         *AuthHandler
+	TaskHandler         *TaskHandler
+	SubScriptionHandler *SubscriptionHandler
 }
 
 // NewGinService :
 func NewGinService(
 	authHandler *AuthHandler,
 	taskHandler *TaskHandler,
+	subscriptionHandler *SubscriptionHandler,
 ) *GinService {
 	return &GinService{
-		AuthHandler: authHandler,
-		TaskHandler: taskHandler,
+		AuthHandler:         authHandler,
+		TaskHandler:         taskHandler,
+		SubScriptionHandler: subscriptionHandler,
 	}
 }
 
@@ -67,7 +70,16 @@ func (g *GinService) Run() {
 
 		v1.GET("/plans",
 			g.AuthHandler.AuthMiddleware,
-			g.AuthHandler.GetPlans,
+			g.SubScriptionHandler.GetPlans,
+		)
+
+		v1.POST("/subscribe/:plan_id",
+			g.AuthHandler.AuthMiddleware,
+			g.SubScriptionHandler.Subscribe,
+		)
+
+		v1.POST("/payment-success",
+			g.SubScriptionHandler.PaymentSuccess,
 		)
 
 		v1.GET("/user",

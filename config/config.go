@@ -52,6 +52,21 @@ var (
 	// RPApiSecret : API Key for RazorPay
 	RPApiSecret string
 
+	// FrontendBase : This is the front-end base
+	FrontendBase string
+
+	// BackendBase : This is the back-end base
+	BackendBase string
+
+	// DooTodayLogo : This is the logo URL
+	DooTodayLogo string
+
+	// DooTodayName : This is the name
+	DooTodayName string
+
+	// DooTodayDesc : This is the description
+	DooTodayDesc string
+
 	// Environment : dev environment, production, docker, etc
 	Environment AppEnvironment
 
@@ -122,6 +137,12 @@ func SetSettingsFromViper() {
 	AccessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
 	RefreshTokenSecret = os.Getenv("REFRESH_TOKEN_SECRET")
 
+	FrontendBase = os.Getenv("FRONT_END_BASE")
+	BackendBase = os.Getenv("BACK_END_BASE")
+	DooTodayLogo = os.Getenv("DOO_TODAY_LOGO")
+	DooTodayName = os.Getenv("DOO_TODAY_NAME")
+	DooTodayDesc = os.Getenv("DOO_TODAY_DESC")
+
 	Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 	ServerHostName = os.Getenv("SERVER_HOSTNAME")
 	ServerPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
@@ -161,6 +182,11 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	dbTestDBName := viper.GetString("testDbName")
 	rpAPIKey := viper.GetString("razorpayKey")
 	rpAPISecret := viper.GetString("razorpaySecret")
+	frontEndBase := viper.GetString("frontEndBase")
+	backeEndBase := viper.GetString("backeEndBase")
+	dooTodayLogo := viper.GetString("dooTodayLogo")
+	dooTodayName := viper.GetString("dooTodayName")
+	dooTodayDesc := viper.GetString("dooTodayDesc")
 
 	// Set the OS Environment variables
 	os.Setenv("DB_DRIVER", dbDriver)
@@ -177,5 +203,10 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	os.Setenv("RP_API_SECRET", rpAPISecret)
 	os.Setenv("ACCESS_TOKEN_SECRET", accessTokenSecret)
 	os.Setenv("REFRESH_TOKEN_SECRET", refreshTokenSecret)
+	os.Setenv("FRONT_END_BASE", frontEndBase)
+	os.Setenv("BACK_END_BASE", backeEndBase)
+	os.Setenv("DOO_TODAY_LOGO", dooTodayLogo)
+	os.Setenv("DOO_TODAY_NAME", dooTodayName)
+	os.Setenv("DOO_TODAY_DESC", dooTodayDesc)
 	glog.Info("setEnvironmentVariablesFromConfig: Config finished reading in settings from file.")
 }

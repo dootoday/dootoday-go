@@ -36,7 +36,7 @@ func (os *OrderService) CreateNewOrder(
 	data := map[string]interface{}{
 		"amount":          amountInCents,
 		"currency":        "INR",
-		"receipt_id":      receiptID,
+		"receipt":         receiptID,
 		"payment_capture": 1,
 	}
 
@@ -44,20 +44,6 @@ func (os *OrderService) CreateNewOrder(
 	body, err := os.RPClient.Order.Create(data, extra)
 	if err != nil {
 		glog.Error("Failed from RazorPay - ", err)
-		// return uint(0), err
-		body = map[string]interface{}{
-			"id":          "order_F7yJXwiXrj88Zl",
-			"entity":      "order",
-			"amount":      2000,
-			"amount_paid": 0,
-			"amount_due":  2000,
-			"currency":    "INR",
-			"receipt":     receiptID,
-			"offer_id":    nil,
-			"status":      "created",
-			"attempts":    0,
-			"created_at":  1593331486,
-		}
 	}
 	orderID := body["id"].(string)
 	newOrder := Order{
@@ -71,4 +57,16 @@ func (os *OrderService) CreateNewOrder(
 		return "", err
 	}
 	return newOrder.RPOrderID, nil
+}
+
+// GetOrderByRPOrderID :
+func (os *OrderService) GetOrderByRPOrderID(orderID string) (Order, error) {
+	order := Order{}
+	qry := os.DB.Where("rp_order_id=? AND rp_payment_id=''", orderID).Find(&order)
+	return order, qry.Error
+}
+
+// UpdateOrder :
+func (os *OrderService) UpdateOrder(order Order) error {
+	return os.DB.Save(&order).Error
 }

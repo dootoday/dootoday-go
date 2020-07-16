@@ -51,7 +51,8 @@ func main() {
 		us, tokenService, gauthService, subscription,
 	)
 	taskHandlers := ginservice.NewTaskHandler(taskservice)
-	ginService := ginservice.NewGinService(authHandlers, taskHandlers)
+	subscriptionHandler := ginservice.NewSubscriptionHandler(subscription, order, us)
+	ginService := ginservice.NewGinService(authHandlers, taskHandlers, subscriptionHandler)
 	// Run gin
 	ginService.Run()
 
