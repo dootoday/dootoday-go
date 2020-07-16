@@ -63,14 +63,14 @@ func (sh *SubscriptionHandler) GetPlans(c *gin.Context) {
 	plans, err := sh.SubscriptionService.GetPlansToDisplay(
 		userID.(uint), request.PromoCode,
 	)
-	if err != nil {
-		glog.Error(err)
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": err.Error()},
-		)
-		return
-	}
+	// if err != nil {
+	// 	glog.Error(err)
+	// 	c.JSON(
+	// 		http.StatusBadRequest,
+	// 		gin.H{"error": err.Error()},
+	// 	)
+	// 	return
+	// }
 	type ResponseBody struct {
 		ID                 uint   `json:"plan_id"`
 		Name               string `json:"name"`
@@ -150,57 +150,46 @@ func (sh *SubscriptionHandler) Subscribe(c *gin.Context) {
 		Amount      int    `json:"amount"`
 	}
 	resp := TaskResponse{}
-	// the plan is valid for the user
-	// check the price
-	if plan.OfferAmountInCents == 0 {
-		// if it's 0 then make a subscription
-		err := sh.SubscriptionService.CreateSubscripton(userID, plan.ID, false)
-		if err != nil {
-			glog.Error("Could not subscribe to the plan ", err)
-			c.JSON(
-				http.StatusForbidden,
-				gin.H{"error": "User can not use the plan"},
-			)
-			return
-		}
-	} else {
-		// else create a new order
-		orderID, err := sh.OrderService.CreateNewOrder(userID, plan.ID, plan.OfferAmountInCents)
-		if err != nil {
-			glog.Error("Could not create a new order", err)
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": "Could not create a new order"},
-			)
-			return
-		}
-		user, err := sh.UserService.GetUserByID(userID)
-		if err != nil {
-			glog.Error("Could not fetch the user", err)
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": "Could not fetch the user"},
-			)
-			return
-		}
-		resp.KeyID = config.RPApiKey
-		resp.OrderID = orderID
-		resp.Name = config.DooTodayName
-		resp.Description = config.DooTodayDesc
-		resp.Image = config.DooTodayLogo
-		resp.UserName = user.FirstName + " " + user.LastName
-		resp.UserEmail = user.Email
-		resp.UserPhone = ""
-		resp.CallBackURL = config.BackendBase + "/v1/payment-success"
-		resp.CancelURL = config.FrontendBase + "/subscribe?cs=false"
-		resp.Amount = plan.OfferAmountInCents
+	// else create a new order
+	orderID, err := sh.OrderService.CreateNewOrder(userID, plan.ID, plan.OfferAmountInCents)
+	if err != nil {
+		glog.Error("Could not create a new order", err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Could not create a new order"},
+		)
+		return
 	}
+	user, err := sh.UserService.GetUserByID(userID)
+	if err != nil {
+		glog.Error("Could not fetch the user", err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Could not fetch the user"},
+		)
+		return
+	}
+	resp.KeyID = config.RPApiKey
+	resp.OrderID = orderID
+	resp.Name = config.DooTodayName
+	resp.Description = config.DooTodayDesc
+	resp.Image = config.DooTodayLogo
+	resp.UserName = user.FirstName + " " + user.LastName
+	resp.UserEmail = user.Email
+	resp.UserPhone = "9066258469"
+	resp.CallBackURL = config.BackendBase + "/v1/payment-success"
+	resp.CancelURL = config.FrontendBase + "/subscribe?cs=false"
+	resp.Amount = plan.OfferAmountInCents
 	c.JSON(http.StatusOK, resp)
 	return
 }
 
 // PaymentSuccess :
 func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
+	// c.Request.ParseMultipartForm(1000)
+	// for key, value := range c.Request.PostForm {
+	// 	fmt.Println(key, value)
+	// }
 	type RequestBody struct {
 		RPOrderID   string `form:"razorpay_order_id" binding:"required"`
 		RPPaymentID string `form:"razorpay_payment_id" binding:"required"`
@@ -251,6 +240,21 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 		)
 		return
 	}
+	err = sh.SubscriptionService.CreateSubscripton(order.UserID, order.PlanID, false)
+	if err != nil {
+		glog.Error("Could not subscribe to the plan ", err)
+		c.Data(
+			http.StatusOK,
+			"text/html; charset=utf-8",
+			[]byte(
+				"<script> window.location.replace('"+
+					config.FrontendBase+
+					"/subscribe?cs=false'); </script>",
+			),
+		)
+		return
+	}
+
 	c.Data(
 		http.StatusOK,
 		"text/html; charset=utf-8",

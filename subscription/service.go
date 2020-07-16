@@ -153,13 +153,3 @@ func (ss *SubscriptionService) DaysLeftForUser(userID uint) (int, error) {
 	// 1 day buffer always
 	return days + 1, nil
 }
-
-// ApplyPromo : this function applies the promo code
-func (ss *SubscriptionService) ApplyPromo(userID uint, code string) error {
-	plan, err := ss.GetPlanByCode(code)
-	if err != nil {
-		glog.Error(err)
-		return err
-	}
-	return ss.CreateSubscripton(userID, plan.ID, false)
-}

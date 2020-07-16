@@ -175,47 +175,6 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// ApplyPromo : refresh token
-func (ah *AuthHandler) ApplyPromo(c *gin.Context) {
-	type RequestBody struct {
-		PromoCode string `json:"code"`
-	}
-	var request RequestBody
-	err := c.BindJSON(&request)
-	if err != nil || request.PromoCode == "" {
-		glog.Error("Promo code is missing")
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": "code is missing"},
-		)
-		return
-	}
-
-	// this was set in context from auth middleware
-	userID, ok := c.Get("user_id")
-
-	if !ok {
-		glog.Error("Could not get the user id from context")
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "could not get the user id from context"},
-		)
-		return
-	}
-
-	err = ah.SubscriptionService.ApplyPromo(userID.(uint), request.PromoCode)
-	if err != nil {
-		glog.Error(err)
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": err.Error()},
-		)
-		return
-	}
-	c.Status(http.StatusOK)
-	return
-}
-
 // GetUser : get ser details
 func (ah *AuthHandler) GetUser(c *gin.Context) {
 	type ResponseBody struct {

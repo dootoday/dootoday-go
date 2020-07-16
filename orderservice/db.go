@@ -15,6 +15,7 @@ type Order struct {
 	RPOrderID     string `gorm:"index:rporder"`
 	RPPaymentID   string
 	RPSignature   string
+	IsRPOrder     bool
 }
 
 // Migrate :

@@ -32,28 +32,36 @@ func (os *OrderService) CreateNewOrder(
 	userID uint, planID uint, amountInCents int,
 ) (string, error) {
 	receiptID := uuid.New().String()
+	orderID := ""
+	rpOrder := false
+	if amountInCents > 0 {
+		data := map[string]interface{}{
+			"amount":          amountInCents,
+			"currency":        "INR",
+			"receipt":         receiptID,
+			"payment_capture": 1,
+		}
 
-	data := map[string]interface{}{
-		"amount":          amountInCents,
-		"currency":        "INR",
-		"receipt":         receiptID,
-		"payment_capture": 1,
+		extra := map[string]string{}
+		body, err := os.RPClient.Order.Create(data, extra)
+		if err != nil {
+			glog.Error("Failed from RazorPay - ", err)
+		}
+		orderID = body["id"].(string)
+		rpOrder = true
+	} else {
+		orderID = uuid.New().String()
 	}
 
-	extra := map[string]string{}
-	body, err := os.RPClient.Order.Create(data, extra)
-	if err != nil {
-		glog.Error("Failed from RazorPay - ", err)
-	}
-	orderID := body["id"].(string)
 	newOrder := Order{
 		RPOrderID:     orderID,
 		ReceiptID:     receiptID,
 		UserID:        userID,
 		PlanID:        planID,
 		AmountInCents: amountInCents,
+		IsRPOrder:     rpOrder,
 	}
-	err = os.DB.Create(&newOrder).Error
+	err := os.DB.Create(&newOrder).Error
 	if err != nil {
 		glog.Error("Failed to create new order")
 		return "", err

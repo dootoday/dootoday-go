@@ -63,11 +63,6 @@ func (g *GinService) Run() {
 		v1.POST("/login", g.AuthHandler.Login)
 		v1.POST("/refresh", g.AuthHandler.Refresh)
 
-		v1.POST("/apply-promo",
-			g.AuthHandler.AuthMiddleware,
-			g.AuthHandler.ApplyPromo,
-		)
-
 		v1.GET("/plans",
 			g.AuthHandler.AuthMiddleware,
 			g.SubScriptionHandler.GetPlans,
