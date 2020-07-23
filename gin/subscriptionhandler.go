@@ -178,7 +178,7 @@ func (sh *SubscriptionHandler) Subscribe(c *gin.Context) {
 	resp.UserEmail = user.Email
 	resp.UserPhone = "9066258469"
 	resp.CallBackURL = config.BackendBase + "/v1/payment-success"
-	resp.CancelURL = config.FrontendBase + "/subscribe?cs=false"
+	resp.CancelURL = config.FrontendBase + "/me/subscription?cs=false"
 	resp.Amount = plan.OfferAmountInCents
 	c.JSON(http.StatusOK, resp)
 	return
@@ -205,7 +205,7 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 			[]byte(
 				"<script> window.location.replace('"+
 					config.FrontendBase+
-					"/subscribe?cs=false'); </script>",
+					"/me/subscription?cs=false'); </script>",
 			),
 		)
 		return
@@ -219,7 +219,7 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 			[]byte(
 				"<script> window.location.replace('"+
 					config.FrontendBase+
-					"/subscribe?cs=false'); </script>",
+					"/me/subscription?cs=false'); </script>",
 			),
 		)
 		return
@@ -235,7 +235,7 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 			[]byte(
 				"<script> window.location.replace('"+
 					config.FrontendBase+
-					"/subscribe?cs=false'); </script>",
+					"/me/subscription?cs=false'); </script>",
 			),
 		)
 		return
@@ -249,7 +249,7 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 			[]byte(
 				"<script> window.location.replace('"+
 					config.FrontendBase+
-					"/subscribe?cs=false'); </script>",
+					"/me/subscription?cs=false'); </script>",
 			),
 		)
 		return
@@ -261,7 +261,7 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 		[]byte(
 			"<script> window.location.replace('"+
 				config.FrontendBase+
-				"/subscribe?cs=true'); </script>",
+				"/me/subscription?cs=true'); </script>",
 		),
 	)
 	return
