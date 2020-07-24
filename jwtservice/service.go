@@ -33,7 +33,7 @@ func (j *TokenService) GetAccessToken(userID uint) string {
 	claims := sjwt.New()
 	claims.Set("user_id", userID)
 	claims.SetIssuedAt(time.Now().UTC())
-	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 1))
+	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 24 * 7)) // 7 days
 	secretKey := []byte(config.AccessTokenSecret)
 	jwt := claims.Generate(secretKey)
 	return jwt
@@ -44,7 +44,7 @@ func (j *TokenService) GetRefreshToken(userID uint) string {
 	claims := sjwt.New()
 	claims.Set("user_id", userID)
 	claims.SetIssuedAt(time.Now().UTC())
-	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 24 * 30 * 12))
+	claims.SetExpiresAt(time.Now().UTC().Add(time.Hour * 24 * 30 * 12)) // 1 year
 	secretKey := []byte(config.RefreshTokenSecret)
 	jwt := claims.Generate(secretKey)
 	return jwt
