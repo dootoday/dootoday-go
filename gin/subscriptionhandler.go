@@ -77,6 +77,7 @@ func (sh *SubscriptionHandler) GetPlans(c *gin.Context) {
 		Desc               string `json:"description"`
 		AmountInCents      int    `json:"amount"`
 		OfferAmountInCents int    `json:"offer_amount"`
+		DurationInDays     int    `json:"duration"`
 	}
 	resp := []ResponseBody{}
 	for _, plan := range plans {
@@ -88,6 +89,7 @@ func (sh *SubscriptionHandler) GetPlans(c *gin.Context) {
 				Desc:               plan.Description,
 				AmountInCents:      plan.AmountInCents,
 				OfferAmountInCents: plan.OfferAmountInCents,
+				DurationInDays:     plan.DurationInDays,
 			},
 		)
 	}
