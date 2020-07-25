@@ -129,7 +129,7 @@ func (sh *SubscriptionHandler) Subscribe(c *gin.Context) {
 	}
 	// This is to verify if the user can avail the plan
 	// third param true is very important
-	err = sh.SubscriptionService.CreateSubscripton(userID, plan.ID, true)
+	err = sh.SubscriptionService.CreateSubscripton(userID, plan.ID, uint(0), true)
 	if err != nil {
 		glog.Error("User can not use the plan ", err)
 		c.JSON(
@@ -242,7 +242,7 @@ func (sh *SubscriptionHandler) PaymentSuccess(c *gin.Context) {
 		)
 		return
 	}
-	err = sh.SubscriptionService.CreateSubscripton(order.UserID, order.PlanID, false)
+	err = sh.SubscriptionService.CreateSubscripton(order.UserID, order.PlanID, order.ID, false)
 	if err != nil {
 		glog.Error("Could not subscribe to the plan ", err)
 		c.Data(

@@ -121,7 +121,7 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 			return
 		}
 		err = ah.SubscriptionService.CreateSubscripton(
-			userID, initialPlanID, false,
+			userID, initialPlanID, uint(0), false,
 		)
 		if err != nil {
 			glog.Error(err)
@@ -209,8 +209,9 @@ func (ah *AuthHandler) GetUser(c *gin.Context) {
 	leftDays, err := ah.SubscriptionService.DaysLeftForUser(user.ID)
 	if err != nil {
 		glog.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
-		return
+		// We should not return error in case subscription ends
+		// c.JSON(http.StatusInternalServerError, err)
+		// return
 	}
 	resp := ResponseBody{
 		FirstName: user.FirstName,
@@ -219,5 +220,9 @@ func (ah *AuthHandler) GetUser(c *gin.Context) {
 		Avatar:    user.Avatar,
 		LeftDays:  leftDays,
 	}
-	c.JSON(http.StatusOK, resp)
+	status := http.StatusOK
+	if leftDays < 1 {
+		status = http.StatusPartialContent
+	}
+	c.JSON(status, resp)
 }

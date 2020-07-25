@@ -12,6 +12,7 @@ type Subscription struct {
 	gorm.Model
 	UserID    uint `gorm:"index:usersub"`
 	PlanID    uint
+	OrderID   uint
 	StartDate time.Time
 	EndDate   time.Time
 }

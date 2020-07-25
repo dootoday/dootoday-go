@@ -39,7 +39,7 @@ func (ss *SubscriptionService) GetPlansToDisplay(userID uint, code string) ([]Pl
 	// Check if user has already used any of the plans by allowed number
 	for _, plan := range plans {
 		// third param true is very important
-		err := ss.CreateSubscripton(userID, plan.ID, true)
+		err := ss.CreateSubscripton(userID, plan.ID, uint(0), true)
 		if err != nil {
 			return output, err
 		}
@@ -77,7 +77,7 @@ func (ss *SubscriptionService) GetUserSubscriptionsByPlanID(
 // If dryRun is true it'll do everything but make an entry to the DB
 // It is used to check if an actual createion is going to be sucessful
 func (ss *SubscriptionService) CreateSubscripton(
-	userID uint, planID uint, dryRun bool,
+	userID uint, planID uint, orderID uint, dryRun bool,
 ) error {
 	plan, err := ss.GetPlanByID(planID)
 	if err != nil {
@@ -123,6 +123,7 @@ func (ss *SubscriptionService) CreateSubscripton(
 		UserID:    userID,
 		PlanID:    planID,
 		StartDate: startDate,
+		OrderID:   orderID,
 		EndDate: startDate.Add(
 			time.Hour * 24 * time.Duration(plan.DurationInDays),
 		),
