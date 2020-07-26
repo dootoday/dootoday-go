@@ -67,6 +67,15 @@ var (
 	// DooTodayDesc : This is the description
 	DooTodayDesc string
 
+	// RedisHost : This is the Redis host
+	RedisHost string
+
+	// RedisPort : This is the RedisPort
+	RedisPort string
+
+	// RedisPass : This is the RedisPass
+	RedisPass string
+
 	// Environment : dev environment, production, docker, etc
 	Environment AppEnvironment
 
@@ -143,6 +152,10 @@ func SetSettingsFromViper() {
 	DooTodayName = os.Getenv("DOO_TODAY_NAME")
 	DooTodayDesc = os.Getenv("DOO_TODAY_DESC")
 
+	RedisHost = os.Getenv("REDIS_HOST")
+	RedisPort = os.Getenv("REDIS_PORT")
+	RedisPass = os.Getenv("REDIS_PASSWORD")
+
 	Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 	ServerHostName = os.Getenv("SERVER_HOSTNAME")
 	ServerPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
@@ -187,6 +200,9 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	dooTodayLogo := viper.GetString("dooTodayLogo")
 	dooTodayName := viper.GetString("dooTodayName")
 	dooTodayDesc := viper.GetString("dooTodayDesc")
+	redisHost := viper.GetString("redisHost")
+	redisPort := viper.GetString("redisPort")
+	redisPassword := viper.GetString("redisPassword")
 
 	// Set the OS Environment variables
 	os.Setenv("DB_DRIVER", dbDriver)
@@ -208,5 +224,8 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	os.Setenv("DOO_TODAY_LOGO", dooTodayLogo)
 	os.Setenv("DOO_TODAY_NAME", dooTodayName)
 	os.Setenv("DOO_TODAY_DESC", dooTodayDesc)
+	os.Setenv("REDIS_HOST", redisHost)
+	os.Setenv("REDIS_PORT", redisPort)
+	os.Setenv("REDIS_PASSWORD", redisPassword)
 	glog.Info("setEnvironmentVariablesFromConfig: Config finished reading in settings from file.")
 }

@@ -6,9 +6,11 @@ import (
 	"apidootoday/gorm"
 	jwtservice "apidootoday/jwtservice"
 	orderservice "apidootoday/orderservice"
+	rdclient "apidootoday/redisclient"
 	subscriptionservice "apidootoday/subscription"
 	ts "apidootoday/taskservice"
 	userservice "apidootoday/user"
+	"context"
 
 	"apidootoday/config"
 
@@ -46,11 +48,18 @@ func main() {
 	if err != nil {
 		glog.Fatal("Having some problem with migrating tasks", err)
 	}
-
+	redisClient := rdclient.NewRedisClient(
+		context.Background(),
+		config.RedisHost,
+		config.RedisPort,
+		config.RedisPass,
+		0,
+		string(config.Environment),
+	)
 	authHandlers := ginservice.NewAuthHandler(
 		us, tokenService, gauthService, subscription,
 	)
-	taskHandlers := ginservice.NewTaskHandler(taskservice)
+	taskHandlers := ginservice.NewTaskHandler(taskservice, redisClient)
 	subscriptionHandler := ginservice.NewSubscriptionHandler(subscription, order, us)
 	ginService := ginservice.NewGinService(authHandlers, taskHandlers, subscriptionHandler)
 	// Run gin

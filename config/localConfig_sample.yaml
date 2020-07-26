@@ -30,8 +30,8 @@ serverPort:  "9060"               # Port to run this api on
 # JWT TOKEN SECRETS              #
 ##################################
 
-accessTokenSecret: "access-this-is-a-very-secret-string"
-refreshTokenSecret: "refresh-this-is-a-very-secret-string"
+accessTokenSecret: "access-this-is-a-very-secret-string-1"
+refreshTokenSecret: "refresh-this-is-a-very-secret-string-1"
 
 ##################################
 # RAZORPAY API KEY               #
@@ -53,3 +53,10 @@ backeEndBase: "http://localhost:9060"
 dooTodayLogo: "https://dootoday-assets.s3.ap-south-1.amazonaws.com/logo-200x200.png"
 dooTodayName: "DooToday"
 dooTodayDesc: "Daily task simplified"
+
+##################################
+# REDIS                          #
+##################################
+redisHost: "ec2-15-207-85-133.ap-south-1.compute.amazonaws.com"
+redisPort: 6379
+redisPassword: mFP4NRm6ks5pG99KhGbeUCrM4AgH9S9mj8U9vH69XkKG7MGLZu6jFj82h3WB

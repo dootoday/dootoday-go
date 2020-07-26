@@ -1,6 +1,7 @@
 package service
 
 import (
+	redisclient "apidootoday/redisclient"
 	taskservice "apidootoday/taskservice"
 	"net/http"
 	"strconv"
@@ -12,12 +13,17 @@ import (
 // TaskHandler :
 type TaskHandler struct {
 	TaskService *taskservice.TaskService
+	RedisClient *redisclient.RedisClient
 }
 
 // NewTaskHandler :
-func NewTaskHandler(ts *taskservice.TaskService) *TaskHandler {
+func NewTaskHandler(
+	ts *taskservice.TaskService,
+	rc *redisclient.RedisClient,
+) *TaskHandler {
 	return &TaskHandler{
 		TaskService: ts,
+		RedisClient: rc,
 	}
 }
 
@@ -90,6 +96,10 @@ func (th *TaskHandler) CreateTask(c *gin.Context) {
 		Date:       th.TaskService.FormatDateToString(task.Date),
 		Order:      task.Order,
 	}
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
+	}
 	c.JSON(http.StatusOK, taskResp)
 }
 
@@ -137,6 +147,10 @@ func (th *TaskHandler) UpdateTask(c *gin.Context) {
 			gin.H{"error": err.Error()},
 		)
 		return
+	}
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
 	}
 	c.JSON(http.StatusOK, task)
 }
@@ -204,6 +218,10 @@ func (th *TaskHandler) DeleteTask(c *gin.Context) {
 		)
 		return
 	}
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
+	}
 	c.JSON(http.StatusOK, gin.H{"success": "ok"})
 }
 
@@ -248,7 +266,10 @@ func (th *TaskHandler) CreateColumn(c *gin.Context) {
 		UUID:  col.UUID,
 		Tasks: []TaskResponse{},
 	}
-
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
+	}
 	c.JSON(http.StatusOK, colresp)
 }
 
@@ -289,7 +310,10 @@ func (th *TaskHandler) UpdateColumn(c *gin.Context) {
 		)
 		return
 	}
-
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
+	}
 	c.JSON(http.StatusOK, gin.H{"success": "ok"})
 }
 
@@ -316,7 +340,10 @@ func (th *TaskHandler) DeleteColumn(c *gin.Context) {
 		)
 		return
 	}
-
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
+	}
 	c.JSON(http.StatusOK, gin.H{"success": "ok"})
 }
 
@@ -583,5 +610,30 @@ func (th *TaskHandler) ReposTask(c *gin.Context) {
 			return
 		}
 	}
+	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not set the last updated to the cache", err)
+	}
 	c.JSON(http.StatusOK, gin.H{"success": "ok"})
+}
+
+// GetLastUpdated :
+func (th *TaskHandler) GetLastUpdated(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	val, err := th.RedisClient.GetUserLastUpdate(userID.(uint))
+	if err != nil {
+		glog.Error("Could not get the last updated from the cache", err)
+		c.JSON(http.StatusBadGateway, gin.H{"last_updated": ""})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"last_updated": val})
 }

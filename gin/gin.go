@@ -132,6 +132,11 @@ func (g *GinService) Run() {
 			g.TaskHandler.GetColumns,
 		)
 
+		v1.GET("/last_update",
+			g.AuthHandler.AuthMiddleware,
+			g.TaskHandler.GetLastUpdated,
+		)
+
 		v1.POST("/repos",
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.ReposTask,
