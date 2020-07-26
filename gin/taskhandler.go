@@ -152,7 +152,28 @@ func (th *TaskHandler) UpdateTask(c *gin.Context) {
 	if err != nil {
 		glog.Error("Could not set the last updated to the cache", err)
 	}
-	c.JSON(http.StatusOK, task)
+	col := ""
+	if task.ColumnID != 0 {
+		column, err := th.TaskService.GetColumnByID(task.ColumnID, userID.(uint))
+		if err != nil {
+			glog.Error("Error getting the column", err)
+			c.JSON(
+				http.StatusBadRequest,
+				gin.H{"error": err.Error()},
+			)
+			return
+		}
+		col = column.UUID
+	}
+	taskResp := TaskResponse{
+		ID:         task.ID,
+		Markdown:   task.Markdown,
+		IsDone:     task.Done,
+		ColumnUUID: col,
+		Date:       th.TaskService.FormatDateToString(task.Date),
+		Order:      task.Order,
+	}
+	c.JSON(http.StatusOK, taskResp)
 }
 
 // GetTask :
@@ -185,7 +206,28 @@ func (th *TaskHandler) GetTask(c *gin.Context) {
 		)
 		return
 	}
-	c.JSON(http.StatusOK, task)
+	col := ""
+	if task.ColumnID != 0 {
+		column, err := th.TaskService.GetColumnByID(task.ColumnID, userID.(uint))
+		if err != nil {
+			glog.Error("Error getting the column", err)
+			c.JSON(
+				http.StatusBadRequest,
+				gin.H{"error": err.Error()},
+			)
+			return
+		}
+		col = column.UUID
+	}
+	taskResp := TaskResponse{
+		ID:         task.ID,
+		Markdown:   task.Markdown,
+		IsDone:     task.Done,
+		ColumnUUID: col,
+		Date:       th.TaskService.FormatDateToString(task.Date),
+		Order:      task.Order,
+	}
+	c.JSON(http.StatusOK, taskResp)
 }
 
 // DeleteTask :
