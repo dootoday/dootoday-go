@@ -14,7 +14,8 @@
 ```
 ENVIRONMENT=production \
 DB_DRIVER=mysql \
-DB_NAME=dootoday DB_PORT=3306 \
+DB_NAME=dootoday \
+DB_PORT=3306 \
 DB_HOSTNAME=dootoday.ci5opzkdzsli.ap-south-1.rds.amazonaws.com \
 DB_USERNAME=root \
 DB_PASSWORD=hTHLkRG5Due9Fms6KBF3 \
@@ -30,5 +31,8 @@ BACK_END_BASE='https://api.doo.today' \
 DOO_TODAY_LOGO='https://dootoday-assets.s3.ap-south-1.amazonaws.com/logo-200x200.png' \
 DOO_TODAY_NAME='DooToday', \
 DOO_TODAY_DESC='Daily task simplified' \
-./newmain
+REDIS_HOST='ec2-15-207-85-133.ap-south-1.compute.amazonaws.com' \
+REDIS_PORT=6379 \
+REDIS_PASSWORD=mFP4NRm6ks5pG99KhGbeUCrM4AgH9S9mj8U9vH69XkKG7MGLZu6jFj82h3WB \
+./main
 ```
