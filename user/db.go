@@ -11,7 +11,7 @@ type User struct {
 
 	FirstName string `gorm:"type:varchar(100);"`
 	LastName  string `gorm:"type:varchar(100);"`
-	Email     string `gorm:"type:varchar(100);unique_index"`
+	Email     string `gorm:"type:varchar(100);"`
 	GoogleID  string `gorm:"index:googleid"`
 	Avatar    string `gorm:"type:text"`
 }
@@ -21,6 +21,11 @@ type User struct {
 func (us *UserService) Migrate() error {
 	glog.Info("Creating users table")
 	err := us.DB.AutoMigrate(&User{}).Error
+	if err != nil {
+		glog.Info(err)
+	}
+	// Drop unique key on email
+	err = us.DB.Exec(`ALTER TABLE users DROP INDEX uix_users_email;`).Error
 	if err != nil {
 		glog.Info(err)
 	}
