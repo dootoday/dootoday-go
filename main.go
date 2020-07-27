@@ -57,7 +57,7 @@ func main() {
 		string(config.Environment),
 	)
 	authHandlers := ginservice.NewAuthHandler(
-		us, tokenService, gauthService, subscription,
+		us, tokenService, gauthService, taskservice, subscription,
 	)
 	taskHandlers := ginservice.NewTaskHandler(taskservice, redisClient)
 	subscriptionHandler := ginservice.NewSubscriptionHandler(subscription, order, us)

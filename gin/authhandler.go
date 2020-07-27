@@ -4,6 +4,7 @@ import (
 	gauthservice "apidootoday/googleauth"
 	jwtservice "apidootoday/jwtservice"
 	subscriptionservice "apidootoday/subscription"
+	taskservice "apidootoday/taskservice"
 	userservice "apidootoday/user"
 	"errors"
 	"net/http"
@@ -18,6 +19,7 @@ type AuthHandler struct {
 	UserService         *userservice.UserService
 	TokenService        *jwtservice.TokenService
 	GAuthService        *gauthservice.GoogleAuthService
+	TaskService         *taskservice.TaskService
 	SubscriptionService *subscriptionservice.SubscriptionService
 }
 
@@ -26,12 +28,14 @@ func NewAuthHandler(
 	userService *userservice.UserService,
 	tokenService *jwtservice.TokenService,
 	gauthService *gauthservice.GoogleAuthService,
+	taskService *taskservice.TaskService,
 	subService *subscriptionservice.SubscriptionService,
 ) *AuthHandler {
 	return &AuthHandler{
 		UserService:         userService,
 		TokenService:        tokenService,
 		GAuthService:        gauthService,
+		TaskService:         taskService,
 		SubscriptionService: subService,
 	}
 }
@@ -127,6 +131,11 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 			glog.Error(err)
 			c.JSON(http.StatusInternalServerError, err)
 			return
+		}
+		// Create task presets
+		err = ah.TaskService.CreatePresetForNewUser(userID)
+		if err != nil {
+			glog.Error(err)
 		}
 	}
 	resp := ResponseBody{
