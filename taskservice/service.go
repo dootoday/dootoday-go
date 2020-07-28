@@ -276,7 +276,7 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 		"Tomorrow is a new opportinity",
 		"Let's plan for the entire week",
 		"Start a simple yet productive journey",
-		"All the best :blush:",
+		"All the best and keep smiling everyday :blush:",
 	}
 	for _, task := range tasksForTomorrow {
 		ts.CreateTask(task, false, userID, "", time.Now().Add(24*time.Hour).Format("2006-01-02"))
