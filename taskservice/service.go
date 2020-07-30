@@ -253,7 +253,6 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 		ts.CreateColumn(userID, col)
 	}
 	tasksForToday := []string{
-		"Watch **Dil Bechara** :heart: in memory of SSR",
 		"You can write **`markdow`** here",
 		"What markdown is? [Check out](https://www.markdownguide.org/)",
 		"You can always double tap to edit :pen:",
@@ -266,17 +265,15 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 		ts.CreateTask(task, false, userID, "", time.Now().Format("2006-01-02"))
 	}
 	tasksForYesterday := []string{
-		"This is how happiness looks like",
-		"Let it go",
+		"This is how achievement looks like",
 	}
 	for _, task := range tasksForYesterday {
 		ts.CreateTask(task, true, userID, "", time.Now().Add(-24*time.Hour).Format("2006-01-02"))
 	}
 	tasksForTomorrow := []string{
-		"Tomorrow is a new opportinity",
 		"Let's plan for the entire week",
 		"Start a simple yet productive journey",
-		"All the best and keep smiling everyday :blush:",
+		"All the best!",
 	}
 	for _, task := range tasksForTomorrow {
 		ts.CreateTask(task, false, userID, "", time.Now().Add(24*time.Hour).Format("2006-01-02"))
