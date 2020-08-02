@@ -12,12 +12,13 @@ import (
 // Task :
 type Task struct {
 	gorm.Model
-	UserID   uint `gorm:"index:usertask"`
-	ColumnID uint `gorm:"index:columntask"`
-	Markdown string
-	Order    int
-	Done     bool
-	Date     *time.Time `gorm:"default:NULL"`
+	UserID          uint `gorm:"index:usertask"`
+	ColumnID        uint `gorm:"index:columntask"`
+	Markdown        string
+	Order           int
+	Done            bool
+	RecurringTypeID uint
+	Date            *time.Time `gorm:"default:NULL"`
 }
 
 // Column :
@@ -27,6 +28,8 @@ type Column struct {
 	UserID uint   `gorm:"index:usercolumn"`
 	Name   string
 }
+
+// RecurringTypes :
 
 // TaskDBService :
 type TaskDBService struct {
