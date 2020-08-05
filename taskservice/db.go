@@ -354,7 +354,6 @@ func (ts *TaskDBService) CreateRecurringTaskStatus(
 		Done:   isDone,
 	}
 	err := ts.DB.Create(&rts).Error
-	glog.Error("#####-1", rts.ID)
 	return rts, err
 }
 
