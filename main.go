@@ -29,7 +29,8 @@ func main() {
 	subscription := subscriptionservice.NewSubscriptionService(db)
 	order := orderservice.NewOrderService(db)
 	taskdbservice := ts.NewTaskDBService(db)
-	taskservice := ts.NewTaskService(taskdbservice)
+	recurringtaskservice := ts.NewRecurringTaskService(taskdbservice)
+	taskservice := ts.NewTaskService(taskdbservice, recurringtaskservice)
 
 	// Table migrations
 	err = us.Migrate()
@@ -59,7 +60,7 @@ func main() {
 	authHandlers := ginservice.NewAuthHandler(
 		us, tokenService, gauthService, taskservice, subscription,
 	)
-	taskHandlers := ginservice.NewTaskHandler(taskservice, redisClient)
+	taskHandlers := ginservice.NewTaskHandler(taskservice, recurringtaskservice, redisClient)
 	subscriptionHandler := ginservice.NewSubscriptionHandler(subscription, order, us)
 	ginService := ginservice.NewGinService(authHandlers, taskHandlers, subscriptionHandler)
 	// Run gin

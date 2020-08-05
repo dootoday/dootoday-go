@@ -5,6 +5,7 @@ import (
 	taskservice "apidootoday/taskservice"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
@@ -12,29 +13,33 @@ import (
 
 // TaskHandler :
 type TaskHandler struct {
-	TaskService *taskservice.TaskService
-	RedisClient *redisclient.RedisClient
+	TaskService          *taskservice.TaskService
+	RecurringTaskService *taskservice.RecurringTaskService
+	RedisClient          *redisclient.RedisClient
 }
 
 // NewTaskHandler :
 func NewTaskHandler(
 	ts *taskservice.TaskService,
+	rts *taskservice.RecurringTaskService,
 	rc *redisclient.RedisClient,
 ) *TaskHandler {
 	return &TaskHandler{
-		TaskService: ts,
-		RedisClient: rc,
+		TaskService:          ts,
+		RecurringTaskService: rts,
+		RedisClient:          rc,
 	}
 }
 
 // TaskResponse :
 type TaskResponse struct {
-	ID         uint   `json:"id"`
-	Markdown   string `json:"markdown"`
-	IsDone     bool   `json:"is_done"`
-	ColumnUUID string `json:"column_id"`
-	Date       string `json:"date"`
-	Order      int    `json:"order"`
+	ID          uint   `json:"id"`
+	Markdown    string `json:"markdown"`
+	IsDone      bool   `json:"is_done"`
+	ColumnUUID  string `json:"column_id"`
+	Date        string `json:"date"`
+	Order       int    `json:"order"`
+	RecurringID uint   `json:"recurring_id"`
 }
 
 // ColumnResponse :
@@ -43,6 +48,33 @@ type ColumnResponse struct {
 	Name     string         `json:"name"`
 	MetaText string         `json:"meta"`
 	Tasks    []TaskResponse `json:"tasks"`
+}
+
+// FormatTaskResponse :
+func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time, col string) (TaskResponse, error) {
+	// If it's a recurring task get the recurring details
+	// for the create date
+	status := task.Done
+	rts := taskservice.RecurringTaskStatus{}
+	if task.RecurringType != taskservice.RecurringNone {
+		res, err := th.RecurringTaskService.GetRecurringTaskStatus(task.ID, date)
+		if err != nil {
+			return TaskResponse{}, err
+		}
+		rts = res
+		status = rts.Done
+	}
+
+	taskResp := TaskResponse{
+		ID:          task.ID,
+		Markdown:    task.Markdown,
+		IsDone:      status,
+		Date:        th.TaskService.FormatDateToString(task.Date),
+		ColumnUUID:  col,
+		Order:       task.Order,
+		RecurringID: rts.ID,
+	}
+	return taskResp, nil
 }
 
 // CreateTask :
@@ -88,13 +120,13 @@ func (th *TaskHandler) CreateTask(c *gin.Context) {
 		)
 		return
 	}
-	taskResp := TaskResponse{
-		ID:         task.ID,
-		Markdown:   task.Markdown,
-		IsDone:     task.Done,
-		ColumnUUID: request.ColumnUUID,
-		Date:       th.TaskService.FormatDateToString(task.Date),
-		Order:      task.Order,
+	taskResp, err := th.FormatTaskResponse(task, task.Date, request.ColumnUUID)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
 	}
 	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
 	if err != nil {
@@ -125,8 +157,9 @@ func (th *TaskHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 	type RequestBody struct {
-		Markdown string `json:"markdown"`
-		IsDone   bool   `json:"is_done"`
+		Markdown    string `json:"markdown"`
+		IsDone      bool   `json:"is_done"`
+		RecurringID uint   `json:"recurring_id"`
 	}
 	var request RequestBody
 	err = c.BindJSON(&request)
@@ -148,6 +181,30 @@ func (th *TaskHandler) UpdateTask(c *gin.Context) {
 		)
 		return
 	}
+
+	// Updating the status if it's a recurring task
+	rts := taskservice.RecurringTaskStatus{}
+	if request.RecurringID > 0 {
+		res, err := th.RecurringTaskService.GetRecurringTaskStatusByID(request.RecurringID, task.ID)
+		if err != nil {
+			c.JSON(
+				http.StatusBadRequest,
+				gin.H{"error": err.Error()},
+			)
+			return
+		}
+		rts = res
+		rts.Done = request.IsDone
+		err = th.RecurringTaskService.UpdateRecurringTaskStatus(rts)
+		if err != nil {
+			c.JSON(
+				http.StatusBadRequest,
+				gin.H{"error": err.Error()},
+			)
+			return
+		}
+	}
+
 	_, err = th.RedisClient.SetUserLastUpdate(userID.(uint))
 	if err != nil {
 		glog.Error("Could not set the last updated to the cache", err)
@@ -165,13 +222,21 @@ func (th *TaskHandler) UpdateTask(c *gin.Context) {
 		}
 		col = column.UUID
 	}
-	taskResp := TaskResponse{
-		ID:         task.ID,
-		Markdown:   task.Markdown,
-		IsDone:     task.Done,
-		ColumnUUID: col,
-		Date:       th.TaskService.FormatDateToString(task.Date),
-		Order:      task.Order,
+
+	checkDate := task.Date
+	// if it's a recurring task pass the recurring date
+	if rts.ID > 0 {
+		checkDate = rts.Date
+	}
+
+	taskResp, err := th.FormatTaskResponse(task, checkDate, col)
+	if err != nil {
+		glog.Error("Error creating the task format", err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
 	}
 	c.JSON(http.StatusOK, taskResp)
 }
@@ -219,13 +284,13 @@ func (th *TaskHandler) GetTask(c *gin.Context) {
 		}
 		col = column.UUID
 	}
-	taskResp := TaskResponse{
-		ID:         task.ID,
-		Markdown:   task.Markdown,
-		IsDone:     task.Done,
-		ColumnUUID: col,
-		Date:       th.TaskService.FormatDateToString(task.Date),
-		Order:      task.Order,
+	taskResp, err := th.FormatTaskResponse(task, task.Date, col)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
 	}
 	c.JSON(http.StatusOK, taskResp)
 }
@@ -422,17 +487,8 @@ func (th *TaskHandler) GetColumns(c *gin.Context) {
 		}
 		taskresp := []TaskResponse{}
 		for _, task := range tasks {
-			taskresp = append(
-				taskresp,
-				TaskResponse{
-					ID:         task.ID,
-					Markdown:   task.Markdown,
-					IsDone:     task.Done,
-					ColumnUUID: col.UUID,
-					Date:       th.TaskService.FormatDateToString(task.Date),
-					Order:      task.Order,
-				},
-			)
+			singleresp, _ := th.FormatTaskResponse(task, task.Date, col.UUID)
+			taskresp = append(taskresp, singleresp)
 		}
 		colresp = append(
 			colresp,
@@ -479,17 +535,8 @@ func (th *TaskHandler) GetColumn(c *gin.Context) {
 	}
 	taskresp := []TaskResponse{}
 	for _, task := range tasks {
-		taskresp = append(
-			taskresp,
-			TaskResponse{
-				ID:         task.ID,
-				Markdown:   task.Markdown,
-				IsDone:     task.Done,
-				ColumnUUID: col.UUID,
-				Date:       th.TaskService.FormatDateToString(task.Date),
-				Order:      task.Order,
-			},
-		)
+		singleresp, _ := th.FormatTaskResponse(task, task.Date, col.UUID)
+		taskresp = append(taskresp, singleresp)
 	}
 	colresp := ColumnResponse{
 		UUID:  col.UUID,
@@ -551,6 +598,15 @@ func (th *TaskHandler) GetTasks(c *gin.Context) {
 		return
 	}
 	colResp := []ColumnResponse{}
+	recurringTasks, err := th.TaskService.GetRecurringTasks(userID.(uint))
+	if err != nil {
+		glog.Error("Could not find recurring tasks", err)
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Could not find recurring tasks"},
+		)
+		return
+	}
 	for _, date := range dates {
 		tasks, err := th.TaskService.GetTasksByDate(date, userID.(uint))
 		if err != nil {
@@ -562,17 +618,43 @@ func (th *TaskHandler) GetTasks(c *gin.Context) {
 			return
 		}
 		taskResp := []TaskResponse{}
-		for _, task := range tasks {
-			taskResp = append(
-				taskResp,
-				TaskResponse{
-					ID:       task.ID,
-					Markdown: task.Markdown,
-					IsDone:   task.Done,
-					Date:     th.TaskService.FormatDateToString(task.Date),
-					Order:    task.Order,
-				},
+
+		// For the recurring tasks
+		for _, task := range recurringTasks {
+			taskTime, _ := time.Parse(
+				"2006-01-02",
+				th.TaskService.FormatDateToString(task.Date),
 			)
+			if th.RecurringTaskService.DoesMatchRecurring(
+				taskTime,
+				date,
+				task.RecurringType,
+			) {
+				singleresp, err := th.FormatTaskResponse(task, &date, "")
+				if err != nil {
+					glog.Error("Could not create task response - ", err)
+					c.JSON(
+						http.StatusBadGateway,
+						gin.H{"error": "Could not create task response"},
+					)
+					return
+				}
+				taskResp = append(taskResp, singleresp)
+			}
+		}
+
+		// For the normal tasks
+		for _, task := range tasks {
+			singleresp, err := th.FormatTaskResponse(task, task.Date, "")
+			if err != nil {
+				glog.Error("Could not create task response - ", err)
+				c.JSON(
+					http.StatusBadGateway,
+					gin.H{"error": "Could not create task response"},
+				)
+				return
+			}
+			taskResp = append(taskResp, singleresp)
 		}
 		colResp = append(
 			colResp,

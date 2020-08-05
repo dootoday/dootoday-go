@@ -6,6 +6,8 @@ package service
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
+	time "time"
 )
 
 // MockITaskDBService is a mock of ITaskDBService interface
@@ -29,4 +31,48 @@ func NewMockITaskDBService(ctrl *gomock.Controller) *MockITaskDBService {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockITaskDBService) EXPECT() *MockITaskDBServiceMockRecorder {
 	return m.recorder
+}
+
+// FindOrCreateRecurringTaskStatus mocks base method
+func (m *MockITaskDBService) FindOrCreateRecurringTaskStatus(taskID uint, date *time.Time) (RecurringTaskStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindOrCreateRecurringTaskStatus", taskID, date)
+	ret0, _ := ret[0].(RecurringTaskStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindOrCreateRecurringTaskStatus indicates an expected call of FindOrCreateRecurringTaskStatus
+func (mr *MockITaskDBServiceMockRecorder) FindOrCreateRecurringTaskStatus(taskID, date interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOrCreateRecurringTaskStatus", reflect.TypeOf((*MockITaskDBService)(nil).FindOrCreateRecurringTaskStatus), taskID, date)
+}
+
+// UpdateRecurringTaskStatus mocks base method
+func (m *MockITaskDBService) UpdateRecurringTaskStatus(rts RecurringTaskStatus) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateRecurringTaskStatus", rts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateRecurringTaskStatus indicates an expected call of UpdateRecurringTaskStatus
+func (mr *MockITaskDBServiceMockRecorder) UpdateRecurringTaskStatus(rts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRecurringTaskStatus", reflect.TypeOf((*MockITaskDBService)(nil).UpdateRecurringTaskStatus), rts)
+}
+
+// GetRecurringTaskStatusByID mocks base method
+func (m *MockITaskDBService) GetRecurringTaskStatusByID(recurringID uint) (RecurringTaskStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRecurringTaskStatusByID", recurringID)
+	ret0, _ := ret[0].(RecurringTaskStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRecurringTaskStatusByID indicates an expected call of GetRecurringTaskStatusByID
+func (mr *MockITaskDBServiceMockRecorder) GetRecurringTaskStatusByID(recurringID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecurringTaskStatusByID", reflect.TypeOf((*MockITaskDBService)(nil).GetRecurringTaskStatusByID), recurringID)
 }
