@@ -55,6 +55,7 @@ func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time
 	// If it's a recurring task get the recurring details
 	// for the create date
 	status := task.Done
+	order := task.Order
 	rts := taskservice.RecurringTaskStatus{}
 	if task.RecurringType != taskservice.RecurringNone {
 		res, err := th.RecurringTaskService.GetRecurringTaskStatus(task.ID, date)
@@ -62,7 +63,7 @@ func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time
 			return TaskResponse{}, err
 		}
 		rts = res
-		status = rts.Done
+		order = rts.Order
 	}
 
 	taskResp := TaskResponse{
@@ -71,7 +72,7 @@ func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time
 		IsDone:      status,
 		Date:        th.TaskService.FormatDateToString(task.Date),
 		ColumnUUID:  col,
-		Order:       task.Order,
+		Order:       order,
 		RecurringID: rts.ID,
 	}
 	return taskResp, nil

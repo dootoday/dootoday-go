@@ -35,6 +35,7 @@ type RecurringTaskStatus struct {
 	Date   *time.Time `gorm:"index:recurring_taskstatus_date"`
 	TaskID uint       `gorm:"index:recurring_taskstatus_task_id"`
 	Done   bool
+	Order  int
 }
 
 // TaskDBService :
@@ -94,12 +95,12 @@ func (ts *TaskDBService) CreateTaskOnColumn(
 func (ts *TaskDBService) CreateTaskOnDate(
 	markdown string, isDone bool, userID uint, date time.Time, recurringType RecurringType,
 ) (Task, error) {
-	order := 1
 	tasks, err := ts.GetTasksByDate(date, userID)
 	if err != nil {
 		return Task{}, err
 	}
-	order = len(tasks) + 1
+	recTaskCount := ts.GetRecurringTaskCountByDate(date, userID)
+	order := len(tasks) + recTaskCount + 1
 	newTask := Task{
 		UserID:        userID,
 		Markdown:      markdown,
@@ -109,6 +110,12 @@ func (ts *TaskDBService) CreateTaskOnDate(
 		RecurringType: recurringType,
 	}
 	err = ts.DB.Create(&newTask).Error
+	if err != nil {
+		return newTask, err
+	}
+	// Create a status entry for the date
+	ts.CreateRecurringTaskStatus(newTask.ID, newTask.Date, order, isDone)
+
 	return newTask, err
 }
 
@@ -206,33 +213,42 @@ func (ts *TaskDBService) ReposTaskDate(
 	taskIDs []uint, date time.Time,
 ) error {
 	tx := ts.DB.Begin()
-	recurringTasks := []Task{}
-	tasks := []Task{}
+	idx := 0
 	for _, taskID := range taskIDs {
 		task, err := ts.GetTaskByID(taskID)
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
-		if task.RecurringType != RecurringNone {
-			recurringTasks = append(recurringTasks, task)
+		if task.RecurringType == RecurringNone {
+			tx.Model(&task).Update(map[string]interface{}{
+				"column_id": nil,
+				"order":     idx,
+				"date":      date,
+			})
+			idx = idx + 1
 		} else {
-			tasks = append(tasks, task)
+			// for recurring task
+			// if the task belong to the same date
+			// then only make some changes
+			rts, err := ts.FindOrCreateRecurringTaskStatus(task.ID, &date)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			diff := (rts.Date.Sub(date)).Hours() / 24
+			// If the recurring task is of the same day
+			// Only then update the order
+			if diff == 0 {
+				rts.Order = idx
+				err := tx.Save(&rts).Error
+				if err != nil {
+					tx.Rollback()
+					return err
+				}
+				idx = idx + 1
+			}
 		}
-	}
-	// we don't update date for recurring tasks
-	for idx, task := range recurringTasks {
-		tx.Model(&task).Update(map[string]interface{}{
-			"column_id": nil,
-			"order":     idx + 1,
-		})
-	}
-	for idx, task := range tasks {
-		tx.Model(&task).Update(map[string]interface{}{
-			"column_id": nil,
-			"order":     idx + 1,
-			"date":      date,
-		})
 	}
 	return tx.Commit().Error
 }
@@ -324,6 +340,24 @@ func (ts *TaskDBService) FindOrCreateRecurringTaskStatus(
 	return rts, err
 }
 
+// CreateRecurringTaskStatus :
+func (ts *TaskDBService) CreateRecurringTaskStatus(
+	taskID uint,
+	date *time.Time,
+	order int,
+	isDone bool,
+) (RecurringTaskStatus, error) {
+	rts := RecurringTaskStatus{
+		TaskID: taskID,
+		Date:   date,
+		Order:  order,
+		Done:   isDone,
+	}
+	err := ts.DB.Create(&rts).Error
+	glog.Error("#####-1", rts.ID)
+	return rts, err
+}
+
 // GetRecurringTaskStatusByID :
 func (ts *TaskDBService) GetRecurringTaskStatusByID(recurringID uint) (RecurringTaskStatus, error) {
 	rts := RecurringTaskStatus{}
@@ -336,4 +370,26 @@ func (ts *TaskDBService) UpdateRecurringTaskStatus(
 	rts RecurringTaskStatus,
 ) error {
 	return ts.DB.Save(&rts).Error
+}
+
+// GetRecurringTaskCountByDate : This function totally depend on the data
+// In RecurringTaskStatus table. This function should be called for a date,
+// Only when that table is populated for the date
+func (ts *TaskDBService) GetRecurringTaskCountByDate(
+	date time.Time, userID uint,
+) int {
+	recurringTasks, err := ts.GetRecurringTasks(userID)
+	if err != nil || len(recurringTasks) == 0 {
+		return 0
+	}
+	taskIDs := []uint{}
+	for _, task := range recurringTasks {
+		taskIDs = append(taskIDs, task.ID)
+	}
+	rts := []RecurringTaskStatus{}
+	err = ts.DB.Where("task_id IN (?) AND date=?", taskIDs, date).Find(&rts).Error
+	if err != nil {
+		return 0
+	}
+	return len(rts)
 }
