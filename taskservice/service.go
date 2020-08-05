@@ -25,12 +25,14 @@ var (
 // TaskService :
 type TaskService struct {
 	TDS *TaskDBService
+	RTS *RecurringTaskService
 }
 
 // NewTaskService  :
-func NewTaskService(tds *TaskDBService) *TaskService {
+func NewTaskService(tds *TaskDBService, rts *RecurringTaskService) *TaskService {
 	return &TaskService{
 		TDS: tds,
+		RTS: rts,
 	}
 }
 
@@ -63,7 +65,8 @@ func (ts *TaskService) CreateTask(
 	} else {
 		formattedDate, _ = time.Parse("2006-01-02", time.Now().Format("2006-01-02"))
 	}
-	return ts.TDS.CreateTaskOnDate(markdown, isDone, userID, formattedDate)
+	actualtask, recurringtype := ts.RTS.IsRecurringTask(markdown)
+	return ts.TDS.CreateTaskOnDate(actualtask, isDone, userID, formattedDate, recurringtype)
 }
 
 // GetTaskByID :
@@ -208,6 +211,11 @@ func (ts *TaskService) FormatDateToString(date *time.Time) string {
 // GetTasksByDate :
 func (ts *TaskService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
 	return ts.TDS.GetTasksByDate(date, userID)
+}
+
+// GetRecurringTasks :
+func (ts *TaskService) GetRecurringTasks(userID uint) ([]Task, error) {
+	return ts.TDS.GetRecurringTasks(userID)
 }
 
 // ReposTaskDate :

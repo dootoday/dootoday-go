@@ -12,13 +12,13 @@ import (
 // Task :
 type Task struct {
 	gorm.Model
-	UserID          uint `gorm:"index:usertask"`
-	ColumnID        uint `gorm:"index:columntask"`
-	Markdown        string
-	Order           int
-	Done            bool
-	RecurringTypeID uint
-	Date            *time.Time `gorm:"default:NULL"`
+	UserID        uint `gorm:"index:usertask"`
+	ColumnID      uint `gorm:"index:columntask"`
+	Markdown      string
+	Order         int
+	Done          bool
+	RecurringType RecurringType `gorm:"default:'none'"`
+	Date          *time.Time    `gorm:"default:NULL"`
 }
 
 // Column :
@@ -29,7 +29,13 @@ type Column struct {
 	Name   string
 }
 
-// RecurringTypes :
+// RecurringTaskStatus :
+type RecurringTaskStatus struct {
+	gorm.Model
+	Date   *time.Time `gorm:"index:recurring_taskstatus_date"`
+	TaskID uint       `gorm:"index:recurring_taskstatus_task_id"`
+	Done   bool
+}
 
 // TaskDBService :
 type TaskDBService struct {
@@ -52,6 +58,11 @@ func (ts *TaskDBService) Migrate() error {
 	}
 	glog.Info("Creating columns table")
 	err = ts.DB.AutoMigrate(&Column{}).Error
+	if err != nil {
+		glog.Error(err)
+	}
+	glog.Info("Creating recurring task status table")
+	err = ts.DB.AutoMigrate(&RecurringTaskStatus{}).Error
 	if err != nil {
 		glog.Error(err)
 	}
@@ -81,7 +92,7 @@ func (ts *TaskDBService) CreateTaskOnColumn(
 
 // CreateTaskOnDate :
 func (ts *TaskDBService) CreateTaskOnDate(
-	markdown string, isDone bool, userID uint, date time.Time,
+	markdown string, isDone bool, userID uint, date time.Time, recurringType RecurringType,
 ) (Task, error) {
 	order := 1
 	tasks, err := ts.GetTasksByDate(date, userID)
@@ -90,11 +101,12 @@ func (ts *TaskDBService) CreateTaskOnDate(
 	}
 	order = len(tasks) + 1
 	newTask := Task{
-		UserID:   userID,
-		Markdown: markdown,
-		Done:     isDone,
-		Date:     &date,
-		Order:    order,
+		UserID:        userID,
+		Markdown:      markdown,
+		Done:          isDone,
+		Date:          &date,
+		Order:         order,
+		RecurringType: recurringType,
 	}
 	err = ts.DB.Create(&newTask).Error
 	return newTask, err
@@ -103,7 +115,7 @@ func (ts *TaskDBService) CreateTaskOnDate(
 // GetTasksByColumn :
 func (ts *TaskDBService) GetTasksByColumn(columnID uint, userID uint) ([]Task, error) {
 	var tasks []Task
-	err := ts.DB.Where("column_id=? AND user_id=?", columnID, userID).Order("order").Find(&tasks).Error
+	err := ts.DB.Where("column_id=? AND user_id=? AND recurring_type='none'", columnID, userID).Order("order").Find(&tasks).Error
 	if err == gorm.ErrRecordNotFound {
 		err = nil
 	}
@@ -113,7 +125,17 @@ func (ts *TaskDBService) GetTasksByColumn(columnID uint, userID uint) ([]Task, e
 // GetTasksByDate :
 func (ts *TaskDBService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
 	var tasks []Task
-	err := ts.DB.Where("date=? AND user_id=?", date, userID).Order("order").Find(&tasks).Error
+	err := ts.DB.Where("date=? AND user_id=? AND recurring_type='none'", date, userID).Order("order").Find(&tasks).Error
+	if err == gorm.ErrRecordNotFound {
+		err = nil
+	}
+	return tasks, err
+}
+
+// GetRecurringTasks :
+func (ts *TaskDBService) GetRecurringTasks(userID uint) ([]Task, error) {
+	var tasks []Task
+	err := ts.DB.Where("user_id=? AND recurring_type!='none'", userID).Order("order").Find(&tasks).Error
 	if err == gorm.ErrRecordNotFound {
 		err = nil
 	}
@@ -271,4 +293,31 @@ func (ts *TaskDBService) UpdateColumn(columnID uint, name string) error {
 // DeleteColumn :
 func (ts *TaskDBService) DeleteColumn(colID uint) error {
 	return ts.DB.Where("id=?", colID).Delete(&Column{}).Error
+}
+
+// FindOrCreateRecurringTaskStatus :
+func (ts *TaskDBService) FindOrCreateRecurringTaskStatus(
+	taskID uint,
+	date *time.Time,
+) (RecurringTaskStatus, error) {
+	rts := RecurringTaskStatus{
+		TaskID: taskID,
+		Date:   date,
+	}
+	err := ts.DB.Where("task_id=? AND date=?", taskID, date).FirstOrCreate(&rts).Error
+	return rts, err
+}
+
+// GetRecurringTaskStatusByID :
+func (ts *TaskDBService) GetRecurringTaskStatusByID(recurringID uint) (RecurringTaskStatus, error) {
+	rts := RecurringTaskStatus{}
+	err := ts.DB.Where("id=?", recurringID).First(&rts).Error
+	return rts, err
+}
+
+// UpdateRecurringTaskStatus :
+func (ts *TaskDBService) UpdateRecurringTaskStatus(
+	rts RecurringTaskStatus,
+) error {
+	return ts.DB.Save(&rts).Error
 }

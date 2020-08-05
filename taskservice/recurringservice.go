@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
@@ -16,6 +17,14 @@ func NewRecurringTaskService(tds ITaskDBService) *RecurringTaskService {
 		TDS: tds,
 	}
 }
+
+var (
+	// ErrNotFountRTS : Error when recurring task status not found
+	ErrNotFountRTS = errors.New("Recurring task status not found")
+
+	// ErrRTSNotValid : Error when recurring task status does not mathc with task ID
+	ErrRTSNotValid = errors.New("Recurring task status not valid")
+)
 
 // IsRecurringTask :
 // Returns Actual Task and Recurring Task Type
@@ -99,4 +108,32 @@ func (ts *RecurringTaskService) DoesMatchRecurring(
 		}
 	}
 	return false
+}
+
+// GetRecurringTaskStatus :
+func (ts *RecurringTaskService) GetRecurringTaskStatus(
+	taskID uint,
+	date *time.Time,
+) (RecurringTaskStatus, error) {
+	return ts.TDS.FindOrCreateRecurringTaskStatus(taskID, date)
+}
+
+// GetRecurringTaskStatusByID :
+func (ts *RecurringTaskService) GetRecurringTaskStatusByID(
+	recurringID uint,
+	taskID uint,
+) (RecurringTaskStatus, error) {
+	rts, err := ts.TDS.GetRecurringTaskStatusByID(recurringID)
+	if err != nil {
+		return rts, ErrNotFountRTS
+	}
+	if rts.TaskID != taskID {
+		return rts, ErrRTSNotValid
+	}
+	return rts, nil
+}
+
+// UpdateRecurringTaskStatus :
+func (ts *RecurringTaskService) UpdateRecurringTaskStatus(rts RecurringTaskStatus) error {
+	return ts.TDS.UpdateRecurringTaskStatus(rts)
 }
