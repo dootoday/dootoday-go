@@ -63,6 +63,7 @@ func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time
 			return TaskResponse{}, err
 		}
 		rts = res
+		status = rts.Done
 		order = rts.Order
 	}
 
