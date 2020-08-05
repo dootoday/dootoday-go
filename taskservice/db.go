@@ -206,12 +206,28 @@ func (ts *TaskDBService) ReposTaskDate(
 	taskIDs []uint, date time.Time,
 ) error {
 	tx := ts.DB.Begin()
-	for idx, taskID := range taskIDs {
+	recurringTasks := []Task{}
+	tasks := []Task{}
+	for _, taskID := range taskIDs {
 		task, err := ts.GetTaskByID(taskID)
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
+		if task.RecurringType != RecurringNone {
+			recurringTasks = append(recurringTasks, task)
+		} else {
+			tasks = append(tasks, task)
+		}
+	}
+	// we don't update date for recurring tasks
+	for idx, task := range recurringTasks {
+		tx.Model(&task).Update(map[string]interface{}{
+			"column_id": nil,
+			"order":     idx + 1,
+		})
+	}
+	for idx, task := range tasks {
 		tx.Model(&task).Update(map[string]interface{}{
 			"column_id": nil,
 			"order":     idx + 1,
