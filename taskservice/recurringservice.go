@@ -29,12 +29,14 @@ var (
 // IsRecurringTask :
 // Returns Actual Task and Recurring Task Type
 func (ts *RecurringTaskService) IsRecurringTask(task string) (string, RecurringType) {
+	taskLower := strings.ToLower(task)
 	splitby := "every"
-	splitted := strings.Split(task, splitby)
+	splitted := strings.Split(taskLower, splitby)
 	if len(splitted) > 1 {
 		last := splitted[len(splitted)-1]
 		trimmed := strings.TrimSpace(last)
-		actualTask := strings.TrimSpace(strings.Join(splitted[:len(splitted)-1], splitby))
+		actualTaskLower := strings.TrimSpace(strings.Join(splitted[:len(splitted)-1], splitby))
+		actualTask := task[0:len(actualTaskLower)]
 		if actualTask == "" {
 			return task, RecurringNone
 		}

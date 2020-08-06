@@ -39,6 +39,17 @@ func TestIsRecurringTask(t *testing.T) {
 			outputType: RecurringEveryDay,
 		},
 
+		"every day - caps": {
+			service: func() *RecurringTaskService {
+				mockTaskDBService := NewMockITaskDBService(ctrl)
+				rts := NewRecurringTaskService(mockTaskDBService)
+				return rts
+			},
+			input:      "This is a task every Day",
+			outputTask: "This is a task",
+			outputType: RecurringEveryDay,
+		},
+
 		"every day with more": {
 			service: func() *RecurringTaskService {
 				mockTaskDBService := NewMockITaskDBService(ctrl)
@@ -68,6 +79,28 @@ func TestIsRecurringTask(t *testing.T) {
 				return rts
 			},
 			input:      "This is a task every week",
+			outputTask: "This is a task",
+			outputType: RecurringEveryWeek,
+		},
+
+		"every week - caps": {
+			service: func() *RecurringTaskService {
+				mockTaskDBService := NewMockITaskDBService(ctrl)
+				rts := NewRecurringTaskService(mockTaskDBService)
+				return rts
+			},
+			input:      "This is a task Every Week",
+			outputTask: "This is a task",
+			outputType: RecurringEveryWeek,
+		},
+
+		"every week - caps - 2": {
+			service: func() *RecurringTaskService {
+				mockTaskDBService := NewMockITaskDBService(ctrl)
+				rts := NewRecurringTaskService(mockTaskDBService)
+				return rts
+			},
+			input:      "This is a task EveryWeek",
 			outputTask: "This is a task",
 			outputType: RecurringEveryWeek,
 		},
