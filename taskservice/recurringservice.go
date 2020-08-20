@@ -115,7 +115,7 @@ func (ts *RecurringTaskService) DoesMatchRecurring(
 // GetRecurringTaskStatus :
 func (ts *RecurringTaskService) GetRecurringTaskStatus(
 	taskID uint,
-	date *time.Time,
+	date string,
 ) (RecurringTaskStatus, error) {
 	return ts.TDS.FindOrCreateRecurringTaskStatus(taskID, date)
 }

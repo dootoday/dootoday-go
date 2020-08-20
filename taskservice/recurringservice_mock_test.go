@@ -7,7 +7,6 @@ package service
 import (
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
-	time "time"
 )
 
 // MockITaskDBService is a mock of ITaskDBService interface
@@ -34,7 +33,7 @@ func (m *MockITaskDBService) EXPECT() *MockITaskDBServiceMockRecorder {
 }
 
 // FindOrCreateRecurringTaskStatus mocks base method
-func (m *MockITaskDBService) FindOrCreateRecurringTaskStatus(taskID uint, date *time.Time) (RecurringTaskStatus, error) {
+func (m *MockITaskDBService) FindOrCreateRecurringTaskStatus(taskID uint, date string) (RecurringTaskStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindOrCreateRecurringTaskStatus", taskID, date)
 	ret0, _ := ret[0].(RecurringTaskStatus)

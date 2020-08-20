@@ -2,7 +2,10 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 var (
@@ -200,12 +203,15 @@ func (ts *TaskService) FormatDate(date string) (time.Time, error) {
 	return time.Parse("2006-01-02", date)
 }
 
-// FormatDateToString :
-func (ts *TaskService) FormatDateToString(date *time.Time) string {
-	if date != nil {
-		return date.Format("2006-01-02")
+// FormatDateString :
+// The date from DB looks like 2020-08-20T00:00:00-05:00
+// We need this in 2020-08-20 format
+func (ts *TaskService) FormatDateString(date string) string {
+	splitted := strings.Split(date, "T")
+	if len(splitted) == 2 {
+		return splitted[0]
 	}
-	return ""
+	return date
 }
 
 // GetTasksByDate :
@@ -226,6 +232,7 @@ func (ts *TaskService) ReposTaskDate(taskIDs []uint, date time.Time, userID uint
 	}
 	err = ts.TDS.ReposTaskDate(taskIDs, date)
 	if err != nil {
+		glog.Error(err)
 		return ErrTaskRepos
 	}
 	return nil

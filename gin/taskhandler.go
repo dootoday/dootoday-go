@@ -51,7 +51,7 @@ type ColumnResponse struct {
 }
 
 // FormatTaskResponse :
-func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time, col string) (TaskResponse, error) {
+func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date string, col string) (TaskResponse, error) {
 	// If it's a recurring task get the recurring details
 	// for the create date
 	status := task.Done
@@ -71,7 +71,7 @@ func (th *TaskHandler) FormatTaskResponse(task taskservice.Task, date *time.Time
 		ID:          task.ID,
 		Markdown:    task.Markdown,
 		IsDone:      status,
-		Date:        th.TaskService.FormatDateToString(task.Date),
+		Date:        th.TaskService.FormatDateString(task.Date),
 		ColumnUUID:  col,
 		Order:       order,
 		RecurringID: rts.ID,
@@ -625,14 +625,16 @@ func (th *TaskHandler) GetTasks(c *gin.Context) {
 		for _, task := range recurringTasks {
 			taskTime, _ := time.Parse(
 				"2006-01-02",
-				th.TaskService.FormatDateToString(task.Date),
+				task.Date,
 			)
 			if th.RecurringTaskService.DoesMatchRecurring(
 				taskTime,
 				date,
 				task.RecurringType,
 			) {
-				singleresp, err := th.FormatTaskResponse(task, &date, "")
+				singleresp, err := th.FormatTaskResponse(
+					task, date.Format("2006-01-02"), "",
+				)
 				if err != nil {
 					glog.Error("Could not create task response - ", err)
 					c.JSON(
@@ -716,6 +718,7 @@ func (th *TaskHandler) ReposTask(c *gin.Context) {
 			userID.(uint),
 		)
 		if err != nil {
+			glog.Error(err)
 			c.JSON(
 				http.StatusBadGateway,
 				gin.H{"error": "Could not resposition the task"},

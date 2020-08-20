@@ -1,10 +1,8 @@
 package service
 
-import "time"
-
 // ITaskDBService :
 type ITaskDBService interface {
-	FindOrCreateRecurringTaskStatus(taskID uint, date *time.Time) (RecurringTaskStatus, error)
+	FindOrCreateRecurringTaskStatus(taskID uint, date string) (RecurringTaskStatus, error)
 	UpdateRecurringTaskStatus(rts RecurringTaskStatus) error
 	GetRecurringTaskStatusByID(recurringID uint) (RecurringTaskStatus, error)
 }

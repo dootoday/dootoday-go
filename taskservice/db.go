@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -18,7 +19,7 @@ type Task struct {
 	Order         int
 	Done          bool
 	RecurringType RecurringType `gorm:"default:'none'"`
-	Date          *time.Time    `gorm:"default:NULL"`
+	Date          string        `gorm:"type:date;default:NULL"`
 }
 
 // Column :
@@ -32,8 +33,8 @@ type Column struct {
 // RecurringTaskStatus :
 type RecurringTaskStatus struct {
 	gorm.Model
-	Date   *time.Time `gorm:"index:recurring_taskstatus_date"`
-	TaskID uint       `gorm:"index:recurring_taskstatus_task_id"`
+	Date   string `gorm:"type:date;index:recurring_taskstatus_date"`
+	TaskID uint   `gorm:"index:recurring_taskstatus_task_id"`
 	Done   bool
 	Order  int
 }
@@ -67,6 +68,17 @@ func (ts *TaskDBService) Migrate() error {
 	if err != nil {
 		glog.Error(err)
 	}
+	// This is temporary
+	// Change the date column type
+	err = ts.DB.Exec(`ALTER TABLE tasks MODIFY COLUMN date date;`).Error
+	if err != nil {
+		glog.Info(err)
+	}
+	err = ts.DB.Exec(`ALTER TABLE recurring_task_statuses MODIFY COLUMN date date;`).Error
+	if err != nil {
+		glog.Info(err)
+	}
+
 	return nil
 }
 
@@ -105,7 +117,7 @@ func (ts *TaskDBService) CreateTaskOnDate(
 		UserID:        userID,
 		Markdown:      markdown,
 		Done:          isDone,
-		Date:          &date,
+		Date:          date.Format("2006-01-02"),
 		Order:         order,
 		RecurringType: recurringType,
 	}
@@ -113,9 +125,13 @@ func (ts *TaskDBService) CreateTaskOnDate(
 	if err != nil {
 		return newTask, err
 	}
-	// Create a status entry for the date
-	ts.CreateRecurringTaskStatus(newTask.ID, newTask.Date, order, isDone)
 
+	if recurringType != RecurringNone {
+		// Create a status entry for the date
+		ts.CreateRecurringTaskStatus(newTask.ID, newTask.Date, order, isDone)
+	}
+	// Format task date
+	newTask.Date = ts.FormatDateString(newTask.Date)
 	return newTask, err
 }
 
@@ -132,9 +148,17 @@ func (ts *TaskDBService) GetTasksByColumn(columnID uint, userID uint) ([]Task, e
 // GetTasksByDate :
 func (ts *TaskDBService) GetTasksByDate(date time.Time, userID uint) ([]Task, error) {
 	var tasks []Task
-	err := ts.DB.Where("date=? AND user_id=? AND recurring_type='none'", date, userID).Order("order").Find(&tasks).Error
+	err := ts.DB.Where(
+		"date=? AND user_id=? AND recurring_type='none'",
+		date.Format("2006-01-02"), userID).Order("order").Find(&tasks).Error
 	if err == gorm.ErrRecordNotFound {
 		err = nil
+	}
+	if err == nil {
+		// Format all task dates
+		for idx := range tasks {
+			tasks[idx].Date = ts.FormatDateString(tasks[idx].Date)
+		}
 	}
 	return tasks, err
 }
@@ -146,6 +170,12 @@ func (ts *TaskDBService) GetRecurringTasks(userID uint) ([]Task, error) {
 	if err == gorm.ErrRecordNotFound {
 		err = nil
 	}
+	if err == nil {
+		// Format all task dates
+		for idx := range tasks {
+			tasks[idx].Date = ts.FormatDateString(tasks[idx].Date)
+		}
+	}
 	return tasks, err
 }
 
@@ -156,6 +186,12 @@ func (ts *TaskDBService) GetTasksByIDs(ids []uint) ([]Task, error) {
 	if err == gorm.ErrRecordNotFound {
 		err = nil
 	}
+	if err == nil {
+		// Format all task dates
+		for idx := range tasks {
+			tasks[idx].Date = ts.FormatDateString(tasks[idx].Date)
+		}
+	}
 	return tasks, err
 }
 
@@ -163,6 +199,10 @@ func (ts *TaskDBService) GetTasksByIDs(ids []uint) ([]Task, error) {
 func (ts *TaskDBService) GetTaskByID(id uint) (Task, error) {
 	var task Task
 	err := ts.DB.Where("id=?", id).Find(&task).Error
+	if err == nil {
+		// Format task date
+		task.Date = ts.FormatDateString(task.Date)
+	}
 	return task, err
 }
 
@@ -175,6 +215,10 @@ func (ts *TaskDBService) UpdateTaskValue(
 		return err
 	}
 	err = ts.DB.Model(&task).Update(map[string]interface{}{"markdown": markdown}).Error
+	if err == nil {
+		// Format task date
+		task.Date = ts.FormatDateString(task.Date)
+	}
 	return err
 }
 
@@ -187,6 +231,10 @@ func (ts *TaskDBService) UpdateTaskStatus(
 		return err
 	}
 	err = ts.DB.Model(&task).Update(map[string]interface{}{"done": done}).Error
+	if err == nil {
+		// Format task date
+		task.Date = ts.FormatDateString(task.Date)
+	}
 	return err
 }
 
@@ -224,22 +272,26 @@ func (ts *TaskDBService) ReposTaskDate(
 			tx.Model(&task).Update(map[string]interface{}{
 				"column_id": nil,
 				"order":     idx,
-				"date":      date,
+				"date":      date.Format("2006-01-02"),
 			})
 			idx = idx + 1
 		} else {
 			// for recurring task
 			// if the task belong to the same date
 			// then only make some changes
-			rts, err := ts.FindOrCreateRecurringTaskStatus(task.ID, &date)
+			rts, err := ts.FindOrCreateRecurringTaskStatus(
+				task.ID,
+				date.Format("2006-01-02"),
+			)
 			if err != nil {
 				tx.Rollback()
 				return err
 			}
-			diff := (rts.Date.Sub(date)).Hours() / 24
+			// The date from DB looks like 2020-08-20T00:00:00-05:00
+			// We need this in 2020-08-20 format
 			// If the recurring task is of the same day
 			// Only then update the order
-			if diff == 0 {
+			if date.Format("2006-01-02") == rts.Date {
 				rts.Order = idx
 				err := tx.Save(&rts).Error
 				if err != nil {
@@ -251,6 +303,17 @@ func (ts *TaskDBService) ReposTaskDate(
 		}
 	}
 	return tx.Commit().Error
+}
+
+// FormatDateString :
+// The date from DB looks like 2020-08-20T00:00:00-05:00
+// We need this in 2020-08-20 format
+func (ts *TaskDBService) FormatDateString(date string) string {
+	splitted := strings.Split(date, "T")
+	if len(splitted) == 2 {
+		return splitted[0]
+	}
+	return date
 }
 
 // ReposTaskColumn :
@@ -330,20 +393,23 @@ func (ts *TaskDBService) DeleteColumn(colID uint) error {
 // FindOrCreateRecurringTaskStatus :
 func (ts *TaskDBService) FindOrCreateRecurringTaskStatus(
 	taskID uint,
-	date *time.Time,
+	date string,
 ) (RecurringTaskStatus, error) {
 	rts := RecurringTaskStatus{
 		TaskID: taskID,
 		Date:   date,
 	}
 	err := ts.DB.Where("task_id=? AND date=?", taskID, date).FirstOrCreate(&rts).Error
+	if err == nil {
+		rts.Date = ts.FormatDateString(rts.Date)
+	}
 	return rts, err
 }
 
 // CreateRecurringTaskStatus :
 func (ts *TaskDBService) CreateRecurringTaskStatus(
 	taskID uint,
-	date *time.Time,
+	date string,
 	order int,
 	isDone bool,
 ) (RecurringTaskStatus, error) {
@@ -354,6 +420,10 @@ func (ts *TaskDBService) CreateRecurringTaskStatus(
 		Done:   isDone,
 	}
 	err := ts.DB.Create(&rts).Error
+	if err == nil {
+		// Format task date
+		rts.Date = ts.FormatDateString(rts.Date)
+	}
 	return rts, err
 }
 
@@ -361,6 +431,10 @@ func (ts *TaskDBService) CreateRecurringTaskStatus(
 func (ts *TaskDBService) GetRecurringTaskStatusByID(recurringID uint) (RecurringTaskStatus, error) {
 	rts := RecurringTaskStatus{}
 	err := ts.DB.Where("id=?", recurringID).First(&rts).Error
+	if err == nil {
+		// Format task date
+		rts.Date = ts.FormatDateString(rts.Date)
+	}
 	return rts, err
 }
 
@@ -368,7 +442,12 @@ func (ts *TaskDBService) GetRecurringTaskStatusByID(recurringID uint) (Recurring
 func (ts *TaskDBService) UpdateRecurringTaskStatus(
 	rts RecurringTaskStatus,
 ) error {
-	return ts.DB.Save(&rts).Error
+	err := ts.DB.Save(&rts).Error
+	if err == nil {
+		// Format task date
+		rts.Date = ts.FormatDateString(rts.Date)
+	}
+	return err
 }
 
 // GetRecurringTaskCountByDate : This function totally depend on the data
@@ -386,7 +465,8 @@ func (ts *TaskDBService) GetRecurringTaskCountByDate(
 		taskIDs = append(taskIDs, task.ID)
 	}
 	rts := []RecurringTaskStatus{}
-	err = ts.DB.Where("task_id IN (?) AND date=?", taskIDs, date).Find(&rts).Error
+	err = ts.DB.Where("task_id IN (?) AND date=?",
+		taskIDs, date.Format("2006-01-02")).Find(&rts).Error
 	if err != nil {
 		return 0
 	}
