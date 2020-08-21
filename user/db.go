@@ -9,11 +9,12 @@ import (
 type User struct {
 	gorm.Model
 
-	FirstName string `gorm:"type:varchar(100);"`
-	LastName  string `gorm:"type:varchar(100);"`
-	Email     string `gorm:"type:varchar(100);"`
-	GoogleID  string `gorm:"index:googleid"`
-	Avatar    string `gorm:"type:text"`
+	FirstName      string `gorm:"type:varchar(100);"`
+	LastName       string `gorm:"type:varchar(100);"`
+	Email          string `gorm:"type:varchar(100);"`
+	GoogleID       string `gorm:"index:googleid"`
+	Avatar         string `gorm:"type:text"`
+	TimeZoneOffset int    `gorm:"type:smallint"`
 }
 
 // Migrate : This is the db migrate function for
@@ -59,4 +60,9 @@ func (us *UserService) GetUserByID(userID uint) (*User, error) {
 	var user User
 	err := us.DB.Where("id=?", userID).Find(&user).Error
 	return &user, err
+}
+
+// UpdateUser :
+func (us *UserService) UpdateUser(user *User) error {
+	return us.DB.Model(user).Update(user).Error
 }

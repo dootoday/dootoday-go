@@ -187,11 +187,12 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 // GetUser : get ser details
 func (ah *AuthHandler) GetUser(c *gin.Context) {
 	type ResponseBody struct {
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
-		Email     string `json:"email"`
-		Avatar    string `json:"avatar"`
-		LeftDays  int    `json:"left_days"`
+		FirstName      string `json:"first_name"`
+		LastName       string `json:"last_name"`
+		Email          string `json:"email"`
+		Avatar         string `json:"avatar"`
+		LeftDays       int    `json:"left_days"`
+		TimeZoneOffset int    `json:"time_zone_offset"`
 	}
 
 	// this was set in context from auth middleware
@@ -223,11 +224,12 @@ func (ah *AuthHandler) GetUser(c *gin.Context) {
 		// return
 	}
 	resp := ResponseBody{
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		Avatar:    user.Avatar,
-		LeftDays:  leftDays,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		Email:          user.Email,
+		Avatar:         user.Avatar,
+		LeftDays:       leftDays,
+		TimeZoneOffset: user.TimeZoneOffset,
 	}
 	status := http.StatusOK
 	if leftDays < 1 {

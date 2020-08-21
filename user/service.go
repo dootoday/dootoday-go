@@ -76,3 +76,17 @@ func (us *UserService) Login(idToken string) (uint, bool, error) {
 	glog.Info("User login ", user.Email)
 	return user.ID, isNewUser, nil
 }
+
+// UpdateUserTimeZoneOffset :
+func (us *UserService) UpdateUserTimeZoneOffset(userID uint, offset int) error {
+	user, err := us.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	user.TimeZoneOffset = offset
+	err = us.UpdateUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}

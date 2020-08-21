@@ -60,9 +60,13 @@ func main() {
 	authHandlers := ginservice.NewAuthHandler(
 		us, tokenService, gauthService, taskservice, subscription,
 	)
+	userHandler := ginservice.NewUserHandler(us)
 	taskHandlers := ginservice.NewTaskHandler(taskservice, recurringtaskservice, redisClient)
 	subscriptionHandler := ginservice.NewSubscriptionHandler(subscription, order, us)
-	ginService := ginservice.NewGinService(authHandlers, taskHandlers, subscriptionHandler)
+	ginService := ginservice.NewGinService(
+		authHandlers, taskHandlers,
+		subscriptionHandler, userHandler,
+	)
 	// Run gin
 	ginService.Run()
 

@@ -13,6 +13,7 @@ type GinService struct {
 	AuthHandler         *AuthHandler
 	TaskHandler         *TaskHandler
 	SubScriptionHandler *SubscriptionHandler
+	UserHandler         *UserHandler
 }
 
 // NewGinService :
@@ -20,11 +21,13 @@ func NewGinService(
 	authHandler *AuthHandler,
 	taskHandler *TaskHandler,
 	subscriptionHandler *SubscriptionHandler,
+	userHandler *UserHandler,
 ) *GinService {
 	return &GinService{
 		AuthHandler:         authHandler,
 		TaskHandler:         taskHandler,
 		SubScriptionHandler: subscriptionHandler,
+		UserHandler:         userHandler,
 	}
 }
 
@@ -80,6 +83,11 @@ func (g *GinService) Run() {
 		v1.GET("/user",
 			g.AuthHandler.AuthMiddleware,
 			g.AuthHandler.GetUser,
+		)
+
+		v1.POST("/user/updatetz",
+			g.AuthHandler.AuthMiddleware,
+			g.UserHandler.UpdateUserTimeZoneOffset,
 		)
 
 		v1.POST("/task",
