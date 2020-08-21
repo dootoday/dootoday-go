@@ -70,15 +70,45 @@ func (ts *TaskDBService) Migrate() error {
 	}
 	// This is temporary
 	// Change the date column type
-	err = ts.DB.Exec(`ALTER TABLE tasks MODIFY COLUMN date date;`).Error
-	if err != nil {
-		glog.Info(err)
+	type ColType struct {
+		DataType string `gorm:"data_type"`
 	}
-	err = ts.DB.Exec(`ALTER TABLE recurring_task_statuses MODIFY COLUMN date date;`).Error
-	if err != nil {
-		glog.Info(err)
+	var taskDateType ColType
+	err = ts.DB.Raw(`
+		SELECT 
+			DATA_TYPE data_type 
+		FROM 
+			INFORMATION_SCHEMA.COLUMNS 
+		WHERE 
+			table_name = 'tasks'
+			AND COLUMN_NAME = 'date'
+		`,
+	).Scan(&taskDateType).Error
+	if err == nil && taskDateType.DataType != "date" {
+		glog.Info("Updateing tasks table date field to date type")
+		err = ts.DB.Exec(`ALTER TABLE tasks MODIFY COLUMN date date;`).Error
+		if err != nil {
+			glog.Info(err)
+		}
 	}
-
+	var rtsDateType ColType
+	err = ts.DB.Raw(`
+		SELECT 
+			DATA_TYPE data_type 
+		FROM 
+			INFORMATION_SCHEMA.COLUMNS 
+		WHERE 
+			table_name = 'recurring_task_statuses'
+			AND COLUMN_NAME = 'date'
+		`,
+	).Scan(&rtsDateType).Error
+	if err == nil && rtsDateType.DataType != "date" {
+		glog.Info("Updateing tasks recurring_task_statuses date field to date type")
+		err = ts.DB.Exec(`ALTER TABLE recurring_task_statuses MODIFY COLUMN date date;`).Error
+		if err != nil {
+			glog.Info(err)
+		}
+	}
 	return nil
 }
 
