@@ -8,6 +8,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var (
+	// ErrColumnNotFound : Error when column is not found
+	ErrPlanNotAllowed = errors.New("This plan is not allowed")
+)
+
 // SubscriptionService :
 type SubscriptionService struct {
 	DB *gorm.DB
@@ -40,7 +45,7 @@ func (ss *SubscriptionService) GetPlansToDisplay(userID uint, code string) ([]Pl
 	for _, plan := range plans {
 		// third param true is very important
 		err := ss.CreateSubscripton(userID, plan.ID, uint(0), true)
-		if err != nil {
+		if err != nil && err != ErrPlanNotAllowed {
 			return output, err
 		}
 		output = append(output, plan)
@@ -92,7 +97,7 @@ func (ss *SubscriptionService) CreateSubscripton(
 		}
 	}
 	if plan.UseAllowed > 0 && plan.UseAllowed <= len(subs) {
-		return errors.New("The plan is not valid")
+		return ErrPlanNotAllowed
 	}
 
 	// If it's just a dryRun return from this point
