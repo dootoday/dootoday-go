@@ -45,11 +45,12 @@ func (ss *SubscriptionService) GetPlansToDisplay(userID uint, code string) ([]Pl
 	for _, plan := range plans {
 		// third param true is very important
 		err := ss.CreateSubscripton(userID, plan.ID, uint(0), true)
-		if err != nil && err.Error() != ErrPlanNotAllowed.Error() {
-			glog.Error(err)
+		if err != nil && err != ErrPlanNotAllowed {
 			return output, err
 		}
-		output = append(output, plan)
+		if err == nil {
+			output = append(output, plan)
+		}
 	}
 	return output, err
 }
