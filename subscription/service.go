@@ -44,9 +44,9 @@ func (ss *SubscriptionService) GetPlansToDisplay(userID uint, code string) ([]Pl
 	// Check if user has already used any of the plans by allowed number
 	for _, plan := range plans {
 		// third param true is very important
-		glog.Error(err)
 		err := ss.CreateSubscripton(userID, plan.ID, uint(0), true)
 		if err != nil && err.Error() != ErrPlanNotAllowed.Error() {
+			glog.Error(err)
 			return output, err
 		}
 		output = append(output, plan)
