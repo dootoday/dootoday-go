@@ -178,7 +178,7 @@ func (sh *SubscriptionHandler) Subscribe(c *gin.Context) {
 	resp.Image = config.DooTodayLogo
 	resp.UserName = user.FirstName + " " + user.LastName
 	resp.UserEmail = user.Email
-	resp.UserPhone = "9066258469"
+	resp.UserPhone = ""
 	resp.CallBackURL = config.BackendBase + "/v1/payment-success"
 	resp.CancelURL = config.FrontendBase + "/me/subscription?cs=false"
 	resp.Amount = plan.OfferAmountInCents
