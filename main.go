@@ -1,6 +1,8 @@
 package main
 
 import (
+	"apidootoday/config"
+	cs "apidootoday/cronservice"
 	ginservice "apidootoday/gin"
 	gauthservice "apidootoday/googleauth"
 	"apidootoday/gorm"
@@ -11,13 +13,24 @@ import (
 	ts "apidootoday/taskservice"
 	userservice "apidootoday/user"
 	"context"
-
-	"apidootoday/config"
+	"flag"
+	"fmt"
 
 	"github.com/golang/glog"
 )
 
 func main() {
+	noRunServer := false
+	flag.BoolVar(&noRunServer, "no-run-server", false, "Don't startup the server.")
+
+	noMigration := false
+	flag.BoolVar(&noMigration, "no-migration", false, "Don't start migration.")
+
+	runBatch := ""
+	flag.StringVar(&runBatch, "batch", "", "Specify a batch to run.")
+
+	flag.Parse()
+
 	db, err := gorm.InitDB()
 	if err != nil {
 		glog.Fatal("Having trouble connecting the database", err)
@@ -31,24 +44,28 @@ func main() {
 	taskdbservice := ts.NewTaskDBService(db)
 	recurringtaskservice := ts.NewRecurringTaskService(taskdbservice)
 	taskservice := ts.NewTaskService(taskdbservice, recurringtaskservice)
+	cronService := cs.NewCronService(us, taskservice)
 
-	// Table migrations
-	err = us.Migrate()
-	if err != nil {
-		glog.Fatal("Having some problem with migration", err)
+	if !noMigration {
+		// Table migrations
+		err = us.Migrate()
+		if err != nil {
+			glog.Fatal("Having some problem with migration", err)
+		}
+		err = subscription.Migrate()
+		if err != nil {
+			glog.Fatal("Having some problem with migration", err)
+		}
+		err = order.Migrate()
+		if err != nil {
+			glog.Fatal("Having some problem with migrating orders", err)
+		}
+		err = taskdbservice.Migrate()
+		if err != nil {
+			glog.Fatal("Having some problem with migrating tasks", err)
+		}
 	}
-	err = subscription.Migrate()
-	if err != nil {
-		glog.Fatal("Having some problem with migration", err)
-	}
-	err = order.Migrate()
-	if err != nil {
-		glog.Fatal("Having some problem with migrating orders", err)
-	}
-	err = taskdbservice.Migrate()
-	if err != nil {
-		glog.Fatal("Having some problem with migrating tasks", err)
-	}
+
 	redisClient := rdclient.NewRedisClient(
 		context.Background(),
 		config.RedisHost,
@@ -57,18 +74,39 @@ func main() {
 		0,
 		string(config.Environment),
 	)
+
+	// Setup handlers
 	authHandlers := ginservice.NewAuthHandler(
 		us, tokenService, gauthService, taskservice, subscription,
 	)
 	userHandler := ginservice.NewUserHandler(us)
 	taskHandlers := ginservice.NewTaskHandler(taskservice, recurringtaskservice, redisClient)
 	subscriptionHandler := ginservice.NewSubscriptionHandler(subscription, order, us)
-	ginService := ginservice.NewGinService(
-		authHandlers, taskHandlers,
-		subscriptionHandler, userHandler,
-	)
-	// Run gin
-	ginService.Run()
+
+	// Run batches
+	if runBatch != "" {
+		switch runBatch {
+		case "move-tasks-to-today":
+			err := cronService.MoveTasksToTodayCron()
+			if err != nil {
+				glog.Error(err)
+			}
+		default:
+			glog.Fatal(fmt.Sprintf("Unrecognized batch: %s", runBatch))
+		}
+	}
+
+	glog.Info(noRunServer)
+
+	// Run server
+	if !noRunServer {
+		ginService := ginservice.NewGinService(
+			authHandlers, taskHandlers,
+			subscriptionHandler, userHandler,
+		)
+		// Run gin
+		ginService.Run()
+	}
 
 	defer db.Close()
 }

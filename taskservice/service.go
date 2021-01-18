@@ -295,3 +295,25 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 	}
 	return nil
 }
+
+// UpdateNonRecurringTaskDatesByUserID :
+//
+func (ts *TaskService) UpdateNonRecurringTaskDatesByUserID(
+	userID uint,
+	date time.Time,
+) error {
+	dateStr := date.Format("2006-01-02")
+	tasks, err := ts.TDS.GetOlderUndoneTasksByUserID(userID, dateStr)
+	if err != nil {
+		return err
+	}
+	tskIDs := []uint{}
+	for _, task := range tasks {
+		tskIDs = append(tskIDs, task.ID)
+	}
+	err = ts.TDS.ReposTaskDate(tskIDs, date)
+	if err != nil {
+		return err
+	}
+	return nil
+}
