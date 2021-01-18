@@ -75,11 +75,11 @@ func (ts *TaskDBService) Migrate() error {
 	}
 	var taskDateType ColType
 	err = ts.DB.Raw(`
-		SELECT 
-			DATA_TYPE data_type 
-		FROM 
-			INFORMATION_SCHEMA.COLUMNS 
-		WHERE 
+		SELECT
+			DATA_TYPE data_type
+		FROM
+			INFORMATION_SCHEMA.COLUMNS
+		WHERE
 			table_name = 'tasks'
 			AND COLUMN_NAME = 'date'
 		`,
@@ -93,11 +93,11 @@ func (ts *TaskDBService) Migrate() error {
 	}
 	var rtsDateType ColType
 	err = ts.DB.Raw(`
-		SELECT 
-			DATA_TYPE data_type 
-		FROM 
-			INFORMATION_SCHEMA.COLUMNS 
-		WHERE 
+		SELECT
+			DATA_TYPE data_type
+		FROM
+			INFORMATION_SCHEMA.COLUMNS
+		WHERE
 			table_name = 'recurring_task_statuses'
 			AND COLUMN_NAME = 'date'
 		`,
@@ -501,4 +501,14 @@ func (ts *TaskDBService) GetRecurringTaskCountByDate(
 		return 0
 	}
 	return len(rts)
+}
+
+// GetOlderUndoneTasksByUserID : This function takes userID and Date
+// Returns all the undone tasks for that user before that date
+func (ts *TaskDBService) GetOlderUndoneTasksByUserID(userID uint, date string) ([]Task, error) {
+	tasks := []Task{}
+	err := ts.DB.
+		Where("user_id=? AND date<? AND done=false", userID, date).
+		Find(&tasks).Error
+	return tasks, err
 }

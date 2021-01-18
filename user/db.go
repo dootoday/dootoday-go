@@ -9,12 +9,13 @@ import (
 type User struct {
 	gorm.Model
 
-	FirstName      string `gorm:"type:varchar(100);"`
-	LastName       string `gorm:"type:varchar(100);"`
-	Email          string `gorm:"type:varchar(100);"`
-	GoogleID       string `gorm:"index:googleid"`
-	Avatar         string `gorm:"type:text"`
-	TimeZoneOffset int    `gorm:"type:smallint"`
+	FirstName       string `gorm:"type:varchar(100);"`
+	LastName        string `gorm:"type:varchar(100);"`
+	Email           string `gorm:"type:varchar(100);"`
+	GoogleID        string `gorm:"index:googleid"`
+	Avatar          string `gorm:"type:text"`
+	TimeZoneOffset  int    `gorm:"type:smallint"`
+	AllowAutoUpdate bool   `gorm:"default:0"`
 }
 
 // Migrate : This is the db migrate function for
@@ -65,4 +66,11 @@ func (us *UserService) GetUserByID(userID uint) (*User, error) {
 // UpdateUser :
 func (us *UserService) UpdateUser(user *User) error {
 	return us.DB.Model(user).Update(user).Error
+}
+
+// GetUsersByTimeZoneOffset :
+func (us *UserService) GetUsersByTimeZoneOffset(offset int) ([]User, error) {
+	users := []User{}
+	err := us.DB.Where("time_zone_offset=?", offset).Find(&users).Error
+	return users, err
 }
