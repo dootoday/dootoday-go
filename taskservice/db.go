@@ -508,7 +508,7 @@ func (ts *TaskDBService) GetRecurringTaskCountByDate(
 func (ts *TaskDBService) GetOlderUndoneTasksByUserID(userID uint, date string) ([]Task, error) {
 	tasks := []Task{}
 	err := ts.DB.
-		Where("user_id=? AND date<? AND done=false", userID, date).
+		Where("user_id=? AND date<? AND done=false AND column_id=0", userID, date).
 		Find(&tasks).Error
 	return tasks, err
 }
