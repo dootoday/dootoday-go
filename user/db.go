@@ -68,6 +68,11 @@ func (us *UserService) UpdateUser(user *User) error {
 	return us.DB.Model(user).Update(user).Error
 }
 
+// UpdateAllowAutoTaskMove :
+func (us *UserService) UpdateAllowAutoTaskMove(user *User) error {
+	return us.DB.Model(&user).Where("id = ?", user.ID).Update("allow_auto_update", user.AllowAutoUpdate).Error
+}
+
 // GetUsersByTimeZoneOffset :
 func (us *UserService) GetUsersByTimeZoneOffset(offset int) ([]User, error) {
 	users := []User{}

@@ -90,3 +90,17 @@ func (us *UserService) UpdateUserTimeZoneOffset(userID uint, offset int) error {
 	}
 	return nil
 }
+
+// UpdateAutoTaskMove :
+func (us *UserService) UpdateAutoTaskMove(userID uint, allow bool) error {
+	user, err := us.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	user.AllowAutoUpdate = allow
+	err = us.UpdateAllowAutoTaskMove(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}

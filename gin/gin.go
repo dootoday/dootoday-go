@@ -90,6 +90,11 @@ func (g *GinService) Run() {
 			g.UserHandler.UpdateUserTimeZoneOffset,
 		)
 
+		v1.POST("/user/taskmove",
+			g.AuthHandler.AuthMiddleware,
+			g.UserHandler.UpdateAutoTaskMove,
+		)
+
 		v1.POST("/task",
 			g.AuthHandler.AuthMiddleware,
 			g.TaskHandler.CreateTask,
