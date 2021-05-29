@@ -1,12 +1,14 @@
 package service
 
 import (
+	emailservice "apidootoday/emailservice"
 	gauthservice "apidootoday/googleauth"
 	jwtservice "apidootoday/jwtservice"
 	subscriptionservice "apidootoday/subscription"
 	taskservice "apidootoday/taskservice"
 	userservice "apidootoday/user"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -21,6 +23,7 @@ type AuthHandler struct {
 	GAuthService        *gauthservice.GoogleAuthService
 	TaskService         *taskservice.TaskService
 	SubscriptionService *subscriptionservice.SubscriptionService
+	EmailService        *emailservice.EmailService
 }
 
 // NewAuthHandler :
@@ -30,6 +33,7 @@ func NewAuthHandler(
 	gauthService *gauthservice.GoogleAuthService,
 	taskService *taskservice.TaskService,
 	subService *subscriptionservice.SubscriptionService,
+	emailService *emailservice.EmailService,
 ) *AuthHandler {
 	return &AuthHandler{
 		UserService:         userService,
@@ -37,6 +41,7 @@ func NewAuthHandler(
 		GAuthService:        gauthService,
 		TaskService:         taskService,
 		SubscriptionService: subService,
+		EmailService:        emailService,
 	}
 }
 
@@ -47,7 +52,7 @@ func (ah *AuthHandler) AuthMiddleware(c *gin.Context) {
 		Authorization string `header:"Authorization"`
 	}
 	var reqHeader AuthHeader
-	err := c.BindHeader(&reqHeader)
+	_ = c.BindHeader(&reqHeader)
 	if reqHeader.Authorization == "" {
 		glog.Error("Auth header missing")
 		c.AbortWithStatusJSON(
@@ -58,7 +63,7 @@ func (ah *AuthHandler) AuthMiddleware(c *gin.Context) {
 	}
 	token := strings.Split(reqHeader.Authorization, " ")
 	tok := token[len(token)-1]
-	valid, err := ah.TokenService.IsTokenValid(
+	valid, _ := ah.TokenService.IsTokenValid(
 		tok, jwtservice.AccessTokenType,
 	)
 	if !valid {
@@ -136,6 +141,18 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 		err = ah.TaskService.CreatePresetForNewUser(userID)
 		if err != nil {
 			glog.Error(err)
+		}
+		// Send welcome email to the new user
+		user, err := ah.UserService.GetUserByID(userID)
+		if err == nil {
+			err = ah.EmailService.SendWelcomeEmail(
+				user.Email,
+				user.FirstName+" "+user.LastName,
+				user.FirstName,
+			)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 	resp := ResponseBody{

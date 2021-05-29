@@ -3,6 +3,7 @@ package main
 import (
 	"apidootoday/config"
 	cs "apidootoday/cronservice"
+	es "apidootoday/emailservice"
 	ginservice "apidootoday/gin"
 	gauthservice "apidootoday/googleauth"
 	"apidootoday/gorm"
@@ -45,6 +46,7 @@ func main() {
 	recurringtaskservice := ts.NewRecurringTaskService(taskdbservice)
 	taskservice := ts.NewTaskService(taskdbservice, recurringtaskservice)
 	cronService := cs.NewCronService(us, taskservice)
+	emailService := es.NewEmailService()
 
 	if !noMigration {
 		// Table migrations
@@ -77,7 +79,7 @@ func main() {
 
 	// Setup handlers
 	authHandlers := ginservice.NewAuthHandler(
-		us, tokenService, gauthService, taskservice, subscription,
+		us, tokenService, gauthService, taskservice, subscription, emailService,
 	)
 	userHandler := ginservice.NewUserHandler(us)
 	taskHandlers := ginservice.NewTaskHandler(taskservice, recurringtaskservice, redisClient)
@@ -88,6 +90,15 @@ func main() {
 		switch runBatch {
 		case "move-tasks-to-today":
 			err := cronService.MoveTasksToTodayCron()
+			if err != nil {
+				glog.Error(err)
+			}
+		case "send-email-test":
+			err := emailService.SendWelcomeEmail(
+				"sanborn.sen@gmail.com",
+				"Sudipta Sen",
+				"Sanborn",
+			)
 			if err != nil {
 				glog.Error(err)
 			}

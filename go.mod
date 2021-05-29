@@ -16,6 +16,8 @@ require (
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/razorpay/razorpay-go v0.0.0-20200616141002-0e6c7c357e18
+	github.com/sendgrid/rest v2.6.4+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.10.0+incompatible
 	github.com/spf13/viper v1.7.0
 	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4 // indirect
 	google.golang.org/api v0.28.0
