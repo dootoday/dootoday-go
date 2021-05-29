@@ -60,3 +60,8 @@ dooTodayDesc: "Daily task simplified"
 redisHost: "ec2-15-207-85-133.ap-south-1.compute.amazonaws.com"
 redisPort: 6379
 redisPassword: mFP4NRm6ks5pG99KhGbeUCrM4AgH9S9mj8U9vH69XkKG7MGLZu6jFj82h3WB
+
+##################################
+# SENDGRID EMAIL                 #
+##################################
+sendGridAPIKey: "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"

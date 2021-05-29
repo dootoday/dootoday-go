@@ -76,6 +76,9 @@ var (
 	// RedisPass : This is the RedisPass
 	RedisPass string
 
+	// SendgridKey : This is API key for sendgrid
+	SendgridKey string
+
 	// Environment : dev environment, production, docker, etc
 	Environment AppEnvironment
 
@@ -159,6 +162,8 @@ func SetSettingsFromViper() {
 	Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 	ServerHostName = os.Getenv("SERVER_HOSTNAME")
 	ServerPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
+
+	SendgridKey = os.Getenv("SENDGRID_KEY")
 }
 
 func setEnvironmentVariablesFromConfig(env AppEnvironment) {
@@ -203,6 +208,7 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	redisHost := viper.GetString("redisHost")
 	redisPort := viper.GetString("redisPort")
 	redisPassword := viper.GetString("redisPassword")
+	sgKey := viper.GetString("sendGridAPIKey")
 
 	// Set the OS Environment variables
 	os.Setenv("DB_DRIVER", dbDriver)
@@ -227,5 +233,6 @@ func setEnvironmentVariablesFromConfig(env AppEnvironment) {
 	os.Setenv("REDIS_HOST", redisHost)
 	os.Setenv("REDIS_PORT", redisPort)
 	os.Setenv("REDIS_PASSWORD", redisPassword)
+	os.Setenv("SENDGRID_KEY", sgKey)
 	glog.Info("setEnvironmentVariablesFromConfig: Config finished reading in settings from file.")
 }
