@@ -45,8 +45,8 @@ func main() {
 	taskdbservice := ts.NewTaskDBService(db)
 	recurringtaskservice := ts.NewRecurringTaskService(taskdbservice)
 	taskservice := ts.NewTaskService(taskdbservice, recurringtaskservice)
-	cronService := cs.NewCronService(us, taskservice)
 	emailService := es.NewEmailService()
+	cronService := cs.NewCronService(us, taskservice, emailService)
 
 	if !noMigration {
 		// Table migrations
