@@ -59,7 +59,7 @@ func (cs *CronService) MoveTasksToTodayCron() error {
 			}
 
 			// Send email here to notify the user that the tasks are moved
-			if len(tasks) > 0 {
+			if len(tasks) > 0 && user.AllowDailyEmailUpdate {
 				cs.es.SendTaskMoveEmail(user.Email, user.FirstName+" "+user.LastName, user.FirstName, tasks)
 			}
 		}
