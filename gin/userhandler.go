@@ -60,6 +60,46 @@ func (uh *UserHandler) UpdateAutoTaskMove(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// UpdateDailyEmailUpdate :
+func (uh *UserHandler) UpdateDailyEmailUpdate(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+
+	if !ok {
+		glog.Error("Could not get the user id from context")
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "could not get the user id from context"},
+		)
+		return
+	}
+	type RequestBody struct {
+		AllowDailyEmail bool `json:"allow_daily_email_update"`
+	}
+	var request RequestBody
+	err := c.BindJSON(&request)
+	if err != nil {
+		glog.Error("allow_daily_email_update is missing ", err)
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "allow_daily_email_update is missing"},
+		)
+		return
+	}
+	err = uh.UserService.UpdateDailyEmailUpdate(
+		userID.(uint),
+		request.AllowDailyEmail,
+	)
+	if err != nil {
+		glog.Error("Could not set allow_daily_email_update - ", err)
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
 // UpdateUserTimeZoneOffset :
 func (uh *UserHandler) UpdateUserTimeZoneOffset(c *gin.Context) {
 	userID, ok := c.Get("user_id")
