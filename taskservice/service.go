@@ -268,13 +268,10 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 		ts.CreateColumn(userID, col)
 	}
 	tasksForToday := []string{
-		"You can write **`markdow`** here",
-		"What markdown is? [Check out](https://www.markdownguide.org/)",
+		"You can write [markdown](https://www.markdownguide.org/) here",
 		"You can always double tap to edit :pen:",
-		"Wanna remove an item?",
-		"Just double tap and, erase it.. easy!! :wastebasket:",
-		"Why don't you also try the drag and drop?",
-		"Make plans for tomorrow before go to bed :bed:",
+		"Edit and erase it to delete.. easy!! :wastebasket:",
+		"Make plans for tomorrow before going to bed :bed:",
 	}
 	for _, task := range tasksForToday {
 		ts.CreateTask(task, false, userID, "", time.Now().Format("2006-01-02"))
@@ -288,7 +285,6 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 	tasksForTomorrow := []string{
 		"Let's plan for the entire week",
 		"Start a simple yet productive journey",
-		"All the best!",
 	}
 	for _, task := range tasksForTomorrow {
 		ts.CreateTask(task, false, userID, "", time.Now().Add(24*time.Hour).Format("2006-01-02"))
