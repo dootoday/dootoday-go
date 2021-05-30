@@ -104,3 +104,17 @@ func (us *UserService) UpdateAutoTaskMove(userID uint, allow bool) error {
 	}
 	return nil
 }
+
+// UpdateDailyEmailUpdate :
+func (us *UserService) UpdateDailyEmailUpdate(userID uint, allow bool) error {
+	user, err := us.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	user.AllowDailyEmailUpdate = allow
+	err = us.UpdateAllowDailyEmailUpdate(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}

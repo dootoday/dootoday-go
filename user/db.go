@@ -9,13 +9,14 @@ import (
 type User struct {
 	gorm.Model
 
-	FirstName       string `gorm:"type:varchar(100);"`
-	LastName        string `gorm:"type:varchar(100);"`
-	Email           string `gorm:"type:varchar(100);"`
-	GoogleID        string `gorm:"index:googleid"`
-	Avatar          string `gorm:"type:text"`
-	TimeZoneOffset  int    `gorm:"type:smallint"`
-	AllowAutoUpdate bool   `gorm:"default:0"`
+	FirstName             string `gorm:"type:varchar(100);"`
+	LastName              string `gorm:"type:varchar(100);"`
+	Email                 string `gorm:"type:varchar(100);"`
+	GoogleID              string `gorm:"index:googleid"`
+	Avatar                string `gorm:"type:text"`
+	TimeZoneOffset        int    `gorm:"type:smallint"`
+	AllowAutoUpdate       bool   `gorm:"default:0"`
+	AllowDailyEmailUpdate bool   `gorm:"default:1"`
 }
 
 // Migrate : This is the db migrate function for
@@ -71,6 +72,11 @@ func (us *UserService) UpdateUser(user *User) error {
 // UpdateAllowAutoTaskMove :
 func (us *UserService) UpdateAllowAutoTaskMove(user *User) error {
 	return us.DB.Model(&user).Where("id = ?", user.ID).Update("allow_auto_update", user.AllowAutoUpdate).Error
+}
+
+// UpdateAllowDailyEmailUpdate :
+func (us *UserService) UpdateAllowDailyEmailUpdate(user *User) error {
+	return us.DB.Model(&user).Where("id = ?", user.ID).Update("allow_daily_email_update", user.AllowDailyEmailUpdate).Error
 }
 
 // GetUsersByTimeZoneOffset :

@@ -204,13 +204,14 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 // GetUser : get ser details
 func (ah *AuthHandler) GetUser(c *gin.Context) {
 	type ResponseBody struct {
-		FirstName        string `json:"first_name"`
-		LastName         string `json:"last_name"`
-		Email            string `json:"email"`
-		Avatar           string `json:"avatar"`
-		LeftDays         int    `json:"left_days"`
-		TimeZoneOffset   int    `json:"time_zone_offset"`
-		IsAutoTaskMoveOn bool   `json:"is_auto_task_move_on"`
+		FirstName            string `json:"first_name"`
+		LastName             string `json:"last_name"`
+		Email                string `json:"email"`
+		Avatar               string `json:"avatar"`
+		LeftDays             int    `json:"left_days"`
+		TimeZoneOffset       int    `json:"time_zone_offset"`
+		IsAutoTaskMoveOn     bool   `json:"is_auto_task_move_on"`
+		IsDailyEmailUpdateOn bool   `json:"is_daily_email_update_on"`
 	}
 
 	// this was set in context from auth middleware
@@ -242,13 +243,14 @@ func (ah *AuthHandler) GetUser(c *gin.Context) {
 		// return
 	}
 	resp := ResponseBody{
-		FirstName:        user.FirstName,
-		LastName:         user.LastName,
-		Email:            user.Email,
-		Avatar:           user.Avatar,
-		LeftDays:         leftDays,
-		TimeZoneOffset:   user.TimeZoneOffset,
-		IsAutoTaskMoveOn: user.AllowAutoUpdate,
+		FirstName:            user.FirstName,
+		LastName:             user.LastName,
+		Email:                user.Email,
+		Avatar:               user.Avatar,
+		LeftDays:             leftDays,
+		TimeZoneOffset:       user.TimeZoneOffset,
+		IsAutoTaskMoveOn:     user.AllowAutoUpdate,
+		IsDailyEmailUpdateOn: user.AllowDailyEmailUpdate,
 	}
 	status := http.StatusOK
 	if leftDays < 1 {
