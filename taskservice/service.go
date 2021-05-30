@@ -301,19 +301,21 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 func (ts *TaskService) UpdateNonRecurringTaskDatesByUserID(
 	userID uint,
 	date time.Time,
-) error {
+) ([]string, error) {
 	dateStr := date.Format("2006-01-02")
 	tasks, err := ts.TDS.GetOlderUndoneTasksByUserID(userID, dateStr)
-	if err != nil {
-		return err
-	}
 	tskIDs := []uint{}
+	tasksInString := []string{}
+	if err != nil {
+		return tasksInString, err
+	}
 	for _, task := range tasks {
 		tskIDs = append(tskIDs, task.ID)
+		tasksInString = append(tasksInString, task.Markdown)
 	}
 	err = ts.TDS.ReposTaskDate(tskIDs, date)
 	if err != nil {
-		return err
+		return tasksInString, err
 	}
-	return nil
+	return tasksInString, nil
 }

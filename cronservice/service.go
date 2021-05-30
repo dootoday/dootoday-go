@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
-
+	emailservice "apidootoday/emailservice"
 	taskservice "apidootoday/taskservice"
 	userservice "apidootoday/user"
 )
@@ -14,22 +13,24 @@ import (
 type CronService struct {
 	us *userservice.UserService
 	ts *taskservice.TaskService
+	es *emailservice.EmailService
 }
 
 // NewCronService :
 func NewCronService(
 	us *userservice.UserService,
 	ts *taskservice.TaskService,
+	es *emailservice.EmailService,
 ) *CronService {
 	return &CronService{
 		us: us,
 		ts: ts,
+		es: es,
 	}
 }
 
 // MoveTasksToTodayCron :
 func (cs *CronService) MoveTasksToTodayCron() error {
-	glog.Error("This is just a test")
 	utcNow := time.Now().UTC()
 	utcNowInMins := (utcNow.Hour() * 60) + utcNow.Minute()
 	fmt.Println(utcNow.Hour())
@@ -52,9 +53,14 @@ func (cs *CronService) MoveTasksToTodayCron() error {
 	}
 	for _, user := range users {
 		if user.AllowAutoUpdate {
-			err := cs.ts.UpdateNonRecurringTaskDatesByUserID(user.ID, newDateForTasks)
+			tasks, err := cs.ts.UpdateNonRecurringTaskDatesByUserID(user.ID, newDateForTasks)
 			if err != nil {
 				return err
+			}
+
+			// Send email here to notify the user that the tasks are moved
+			if len(tasks) > 0 {
+				cs.es.SendTaskMoveEmail(user.Email, user.FirstName+" "+user.LastName, user.FirstName, tasks)
 			}
 		}
 	}

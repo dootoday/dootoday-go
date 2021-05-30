@@ -20,7 +20,7 @@ func NewEmailService() *EmailService {
 	}
 }
 
-// SendEmail :
+// SendWelcomeEmail :
 func (s *EmailService) SendWelcomeEmail(
 	toEmail string,
 	toName string,
@@ -37,6 +37,37 @@ func (s *EmailService) SendWelcomeEmail(
 	p.SetDynamicTemplateData("subject", "Welcomet to Doo.Today")
 	sgMail.AddPersonalizations(p)
 	sgMail.SetTemplateID("d-d30ca85798ab4d1faf927c8240e79715")
+	response, err := s.Client.Send(sgMail)
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println(response.StatusCode)
+		log.Println(response.Body)
+		log.Println(response.Headers)
+	}
+	return err
+}
+
+// SendTaskMoveEmail :
+func (s *EmailService) SendTaskMoveEmail(
+	toEmail string,
+	toName string,
+	shortName string,
+	tasks []string,
+) error {
+	from := mail.NewEmail("Doo.Today", "contact@doo.today")
+	to := mail.NewEmail(toName, toEmail)
+	sgMail := mail.NewV3Mail()
+	sgMail.SetFrom(from)
+	sgMail.SetReplyTo(from)
+	p := mail.NewPersonalization()
+	p.AddTos(to)
+	p.SetDynamicTemplateData("name", shortName)
+	p.SetDynamicTemplateData("subject", "Moving undone tasks")
+	p.SetDynamicTemplateData("tasks", tasks)
+	sgMail.AddPersonalizations(p)
+	sgMail.SetTemplateID("d-0398b256912942f983f3e14f4ba335de")
 	response, err := s.Client.Send(sgMail)
 
 	if err != nil {
