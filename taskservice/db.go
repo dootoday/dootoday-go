@@ -281,7 +281,7 @@ func (ts *TaskDBService) VerifyTaskUser(taskIDs []uint, userID uint) error {
 		return err
 	}
 	if len(tasks) != len(taskIDs) {
-		return errors.New("Forbidden task ID")
+		return errors.New("FORBIDDEN TASK ID")
 	}
 	return nil
 }
@@ -360,7 +360,7 @@ func (ts *TaskDBService) ReposTaskColumn(
 		tx.Model(&task).Update(map[string]interface{}{
 			"column_id": columnID,
 			"order":     idx + 1,
-			"date":      nil,
+			"date":      gorm.Expr("NULL"),
 		})
 	}
 	return tx.Commit().Error
