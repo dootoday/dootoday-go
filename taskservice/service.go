@@ -269,15 +269,15 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 	}
 	tasksForToday := []string{
 		"You can write [markdown](https://www.markdownguide.org/) here",
-		"You can always double tap to edit :pen:",
-		"Edit and erase it to delete.. easy!! :wastebasket:",
+		"Change your theme [here](https://doo.today/me/theme)",
+		"Add `everyday`, `everymonth`, `everyweek` or `everyyear` at the end to write recurring tasks",
 		"Make plans for tomorrow before going to bed :bed:",
 	}
 	for _, task := range tasksForToday {
 		ts.CreateTask(task, false, userID, "", time.Now().Format("2006-01-02"))
 	}
 	tasksForYesterday := []string{
-		"This is how achievement looks like",
+		"This is how a completed task looks like",
 	}
 	for _, task := range tasksForYesterday {
 		ts.CreateTask(task, true, userID, "", time.Now().Add(-24*time.Hour).Format("2006-01-02"))
