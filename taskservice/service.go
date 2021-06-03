@@ -285,6 +285,7 @@ func (ts *TaskService) CreatePresetForNewUser(userID uint) error {
 	tasksForTomorrow := []string{
 		"Let's plan for the entire week",
 		"You can turn on auto move undone tasks [here]](https://doo.today/me)",
+		"Make sure you mark these tasks done once read.",
 	}
 	for _, task := range tasksForTomorrow {
 		ts.CreateTask(task, false, userID, "", time.Now().Add(24*time.Hour).Format("2006-01-02"))
