@@ -306,8 +306,10 @@ func (ts *TaskService) UpdateNonRecurringTaskDatesByUserID(
 		return tasksInString, err
 	}
 	for _, task := range tasks {
-		tskIDs = append(tskIDs, task.ID)
-		tasksInString = append(tasksInString, task.Markdown)
+		if task.RecurringType == RecurringNone {
+			tskIDs = append(tskIDs, task.ID)
+			tasksInString = append(tasksInString, task.Markdown)
+		}
 	}
 	err = ts.TDS.ReposTaskDate(tskIDs, date)
 	if err != nil {

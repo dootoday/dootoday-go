@@ -33,8 +33,6 @@ func NewCronService(
 func (cs *CronService) MoveTasksToTodayCron() error {
 	utcNow := time.Now().UTC()
 	utcNowInMins := (utcNow.Hour() * 60) + utcNow.Minute()
-	fmt.Println(utcNow.Hour())
-	fmt.Println(utcNowInMins)
 	offset := 0
 	if utcNowInMins < 720 {
 		offset = utcNowInMins
@@ -52,6 +50,8 @@ func (cs *CronService) MoveTasksToTodayCron() error {
 		newDateForTasks = utcNow.Add(time.Hour * 24)
 	}
 	for _, user := range users {
+		fmt.Println(user.AllowAutoUpdate)
+		fmt.Println(user.AllowDailyEmailUpdate)
 		if user.AllowAutoUpdate {
 			tasks, err := cs.ts.UpdateNonRecurringTaskDatesByUserID(user.ID, newDateForTasks)
 			if err != nil {
