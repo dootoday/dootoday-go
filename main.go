@@ -93,6 +93,10 @@ func main() {
 			if err != nil {
 				glog.Error(err)
 			}
+			err = cronService.DailyMorningEmailCron()
+			if err != nil {
+				glog.Error(err)
+			}
 		case "send-email-test":
 			err := emailService.SendWelcomeEmail(
 				"sanborn.sen@gmail.com",
