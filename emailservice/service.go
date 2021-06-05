@@ -79,3 +79,63 @@ func (s *EmailService) SendTaskMoveEmail(
 	}
 	return err
 }
+
+// SendEmptyListReminder :
+func (s *EmailService) SendEmptyListReminder(
+	toEmail string,
+	toName string,
+	shortName string,
+) error {
+	from := mail.NewEmail("Doo.Today", "contact@doo.today")
+	to := mail.NewEmail(toName, toEmail)
+	sgMail := mail.NewV3Mail()
+	sgMail.SetFrom(from)
+	sgMail.SetReplyTo(from)
+	p := mail.NewPersonalization()
+	p.AddTos(to)
+	p.SetDynamicTemplateData("name", shortName)
+	p.SetDynamicTemplateData("subject", "What you gotta do today?")
+	sgMail.AddPersonalizations(p)
+	sgMail.SetTemplateID("d-5a3e1944da44407182d8a46e81b32acd")
+	response, err := s.Client.Send(sgMail)
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println(response.StatusCode)
+		log.Println(response.Body)
+		log.Println(response.Headers)
+	}
+	return err
+}
+
+// SendYouHaveTasks :
+func (s *EmailService) SendYouHaveTasks(
+	toEmail string,
+	toName string,
+	shortName string,
+	tasks []string,
+) error {
+	from := mail.NewEmail("Doo.Today", "contact@doo.today")
+	to := mail.NewEmail(toName, toEmail)
+	sgMail := mail.NewV3Mail()
+	sgMail.SetFrom(from)
+	sgMail.SetReplyTo(from)
+	p := mail.NewPersonalization()
+	p.AddTos(to)
+	p.SetDynamicTemplateData("name", shortName)
+	p.SetDynamicTemplateData("subject", "Hey you gotta things to do today!")
+	p.SetDynamicTemplateData("tasks", tasks)
+	sgMail.AddPersonalizations(p)
+	sgMail.SetTemplateID("d-98b006cbecbe4db795a020b285b70bff")
+	response, err := s.Client.Send(sgMail)
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println(response.StatusCode)
+		log.Println(response.Body)
+		log.Println(response.Headers)
+	}
+	return err
+}

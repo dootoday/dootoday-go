@@ -84,10 +84,30 @@ func (cs *CronService) DailyMorningEmailCron() error {
 		return err
 	}
 
+	newDateForTasks := utcNow
+	if offset < 0 {
+		// If offset is negative then the place is
+		// ahead of UTC so the date there is one day later
+		newDateForTasks = utcNow.Add(time.Hour * 24)
+	}
+
 	for _, user := range users {
-		if user.ID == 2 && user.Email == "sanborn.sen@gmail.com" && user.AllowDailyEmailUpdate {
-			// Send email here to notify the user that the tasks are moved
-			cs.es.SendWelcomeEmail(user.Email, user.FirstName+" "+user.LastName, user.FirstName)
+		if user.AllowDailyEmailUpdate {
+			tasks, err := cs.ts.GetTasksByDate(newDateForTasks, user.ID)
+			if err != nil {
+				return err
+			}
+			tasksInString := []string{}
+			for _, task := range tasks {
+				if !task.Done {
+					tasksInString = append(tasksInString, task.Markdown)
+				}
+			}
+			if len(tasksInString) > 0 {
+				cs.es.SendYouHaveTasks(user.Email, user.FirstName+" "+user.LastName, user.FirstName, tasksInString)
+			} else {
+				cs.es.SendEmptyListReminder(user.Email, user.FirstName+" "+user.LastName, user.FirstName)
+			}
 		}
 	}
 	return nil
