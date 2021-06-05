@@ -93,6 +93,7 @@ func main() {
 			if err != nil {
 				glog.Error(err)
 			}
+		case "morning-email-reminder":
 			err = cronService.DailyMorningEmailCron()
 			if err != nil {
 				glog.Error(err)
