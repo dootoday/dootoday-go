@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	emailservice "apidootoday/emailservice"
@@ -29,6 +28,12 @@ func NewCronService(
 	}
 }
 
+// CalculateOffset :
+// Time in minutes
+func (cs *CronService) CalculateOffset(mins int, utcNowInMin int) int {
+	return (-1) * (mins - utcNowInMin)
+}
+
 // MoveTasksToTodayCron :
 func (cs *CronService) MoveTasksToTodayCron() error {
 	utcNow := time.Now().UTC()
@@ -50,8 +55,6 @@ func (cs *CronService) MoveTasksToTodayCron() error {
 		newDateForTasks = utcNow.Add(time.Hour * 24)
 	}
 	for _, user := range users {
-		fmt.Println(user.AllowAutoUpdate)
-		fmt.Println(user.AllowDailyEmailUpdate)
 		if user.AllowAutoUpdate {
 			tasks, err := cs.ts.UpdateNonRecurringTaskDatesByUserID(user.ID, newDateForTasks)
 			if err != nil {
@@ -62,6 +65,29 @@ func (cs *CronService) MoveTasksToTodayCron() error {
 			if len(tasks) > 0 && user.AllowDailyEmailUpdate {
 				cs.es.SendTaskMoveEmail(user.Email, user.FirstName+" "+user.LastName, user.FirstName, tasks)
 			}
+		}
+	}
+	return nil
+}
+
+// DailyMorningEmailCron :
+// For 07:00 hours
+func (cs *CronService) DailyMorningEmailCron() error {
+	utcNow := time.Now().UTC()
+	utcNowInMins := (utcNow.Hour() * 60) + utcNow.Minute()
+
+	// Offset for 7 am in the morning
+	offset := cs.CalculateOffset(7*60, utcNowInMins)
+
+	users, err := cs.us.GetUsersByTimeZoneOffset(offset)
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		if user.ID == 2 && user.Email == "sanborn.sen@gmail.com" && user.AllowDailyEmailUpdate {
+			// Send email here to notify the user that the tasks are moved
+			cs.es.SendWelcomeEmail(user.Email, user.FirstName+" "+user.LastName, user.FirstName)
 		}
 	}
 	return nil
