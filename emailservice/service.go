@@ -124,7 +124,7 @@ func (s *EmailService) SendYouHaveTasks(
 	p := mail.NewPersonalization()
 	p.AddTos(to)
 	p.SetDynamicTemplateData("name", shortName)
-	p.SetDynamicTemplateData("subject", "Hey you gotta things to do today!")
+	p.SetDynamicTemplateData("subject", "Hey you got things to do today!")
 	p.SetDynamicTemplateData("tasks", tasks)
 	sgMail.AddPersonalizations(p)
 	sgMail.SetTemplateID("d-98b006cbecbe4db795a020b285b70bff")
