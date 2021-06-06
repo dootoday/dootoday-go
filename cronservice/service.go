@@ -84,16 +84,16 @@ func (cs *CronService) DailyMorningEmailCron() error {
 		return err
 	}
 
-	newDateForTasks := utcNow
-	if offset > 0 {
-		// If offset is positive then the place is
-		// behind UTC so the date there is one day behind
-		newDateForTasks = utcNow.Add(-1 * (time.Hour * 24))
-	}
+	// newDateForTasks := utcNow
+	// if offset > 0 {
+	// 	// If offset is positive then the place is
+	// 	// behind UTC so the date there is one day behind
+	// 	newDateForTasks = utcNow.Add(-1 * (time.Hour * 24))
+	// }
 
 	for _, user := range users {
 		if user.AllowDailyEmailUpdate {
-			tasks, err := cs.ts.GetTasksByDate(newDateForTasks, user.ID)
+			tasks, err := cs.ts.GetTasksByDate(utcNow, user.ID)
 			if err != nil {
 				return err
 			}
