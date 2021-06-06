@@ -77,7 +77,7 @@ func (cs *CronService) DailyMorningEmailCron() error {
 	utcNowInMins := (utcNow.Hour() * 60) + utcNow.Minute()
 
 	// Offset for 7 am in the morning
-	offset := cs.CalculateOffset(7*60, utcNowInMins)
+	offset := cs.CalculateOffset(9*60, utcNowInMins)
 
 	users, err := cs.us.GetUsersByTimeZoneOffset(offset)
 	if err != nil {
