@@ -85,10 +85,10 @@ func (cs *CronService) DailyMorningEmailCron() error {
 	}
 
 	newDateForTasks := utcNow
-	if offset < 0 {
-		// If offset is negative then the place is
-		// ahead of UTC so the date there is one day later
-		newDateForTasks = utcNow.Add(time.Hour * 24)
+	if offset > 0 {
+		// If offset is positive then the place is
+		// behind UTC so the date there is one day behind
+		newDateForTasks = utcNow.Add(-1 * (time.Hour * 24))
 	}
 
 	for _, user := range users {
